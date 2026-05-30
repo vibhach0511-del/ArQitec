@@ -1,0 +1,82 @@
+{
+  "records": [
+    {
+      "n": 6,
+      "edges": 10,
+      "optimum": 8,
+      "brute_force_time_s": 5.9e-05,
+      "heuristic_time_s": 0.000476,
+      "quantum_sim_time_s": 2.15222,
+      "qpu_projected_time_s": 0.003072,
+      "approx_ratio": 1.0
+    },
+    {
+      "n": 8,
+      "edges": 14,
+      "optimum": 11,
+      "brute_force_time_s": 0.000254,
+      "heuristic_time_s": 0.000773,
+      "quantum_sim_time_s": 1.477744,
+      "qpu_projected_time_s": 0.003891,
+      "approx_ratio": 1.0
+    },
+    {
+      "n": 10,
+      "edges": 18,
+      "optimum": 13,
+      "brute_force_time_s": 0.001214,
+      "heuristic_time_s": 0.001093,
+      "quantum_sim_time_s": 1.603013,
+      "qpu_projected_time_s": 0.00471,
+      "approx_ratio": 1.0
+    },
+    {
+      "n": 12,
+      "edges": 21,
+      "optimum": 18,
+      "brute_force_time_s": 0.006136,
+      "heuristic_time_s": 0.001828,
+      "quantum_sim_time_s": 1.527749,
+      "qpu_projected_time_s": 0.005325,
+      "approx_ratio": 1.0
+    },
+    {
+      "n": 14,
+      "edges": 25,
+      "optimum": 21,
+      "brute_force_time_s": 0.02687,
+      "heuristic_time_s": 0.002607,
+      "quantum_sim_time_s": 1.579249,
+      "qpu_projected_time_s": 0.006144,
+      "approx_ratio": 1.0
+    },
+    {
+      "n": 16,
+      "edges": 28,
+      "optimum": 24,
+      "brute_force_time_s": 0.124616,
+      "heuristic_time_s": 0.003107,
+      "quantum_sim_time_s": 1.63353,
+      "qpu_projected_time_s": 0.006758,
+      "approx_ratio": 1.0
+    },
+    {
+      "n": 18,
+      "edges": 32,
+      "optimum": 28,
+      "brute_force_time_s": 0.530026,
+      "heuristic_time_s": 0.004301,
+      "quantum_sim_time_s": 1.909282,
+      "qpu_projected_time_s": 0.007578,
+      "approx_ratio": 0.821
+    }
+  ],
+  "hardware": null,
+  "gain": {
+    "atSize": 18,
+    "classicalTimeS": 0.530026,
+    "qpuProjectedTimeS": 0.007578,
+    "speedup": 69.9,
+    "meanApproxRatio": 0.974
+  }
+}

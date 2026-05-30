@@ -1,0 +1,253 @@
+{
+  "round_time_ns": 1000.0,
+  "shots": 60000,
+  "distances": [
+    3,
+    5,
+    7,
+    9
+  ],
+  "materials": [
+    {
+      "name": "Tantalum / sapphire transmon",
+      "short": "Ta/sapphire",
+      "architecture": "2D fixed-frequency transmon",
+      "p_X": 4e-05,
+      "p_Z": 0.00021,
+      "p_Y": 3e-05,
+      "p_leakage": 1e-05,
+      "p_correlated": 1e-06,
+      "T1_us": 300.0,
+      "T2_us": 200.0,
+      "gate_time_ns": 30.0,
+      "readout_error": 0.007,
+      "p_gate_2q": 0.005,
+      "citation": "Place et al., Nat. Commun. 2021 (Ta on sapphire, T1~0.3ms).",
+      "bias_eta": 3.0,
+      "p_1q_total": 0.00028000000000000003
+    },
+    {
+      "name": "Niobium / silicon transmon (Heron-class)",
+      "short": "Nb/Si",
+      "architecture": "2D tunable-coupler transmon",
+      "p_X": 0.00012,
+      "p_Z": 0.00036,
+      "p_Y": 8e-05,
+      "p_leakage": 2e-05,
+      "p_correlated": 1.5e-06,
+      "T1_us": 180.0,
+      "T2_us": 120.0,
+      "gate_time_ns": 35.0,
+      "readout_error": 0.01,
+      "p_gate_2q": 0.005,
+      "citation": "IBM Heron r1/r2 device specs; Google Willow Nature 2024.",
+      "bias_eta": 1.8,
+      "p_1q_total": 0.0005600000000000001
+    },
+    {
+      "name": "Aluminum transmon (legacy baseline)",
+      "short": "Al (legacy)",
+      "architecture": "2D fixed-frequency transmon",
+      "p_X": 0.00035,
+      "p_Z": 0.00078,
+      "p_Y": 0.00025,
+      "p_leakage": 5e-05,
+      "p_correlated": 3e-06,
+      "T1_us": 90.0,
+      "T2_us": 70.0,
+      "gate_time_ns": 40.0,
+      "readout_error": 0.015,
+      "p_gate_2q": 0.005,
+      "citation": "Pre-Ta aluminum transmons (~2015-2019 era), T1~80-100us.",
+      "bias_eta": 1.3,
+      "p_1q_total": 0.0013800000000000002
+    },
+    {
+      "name": "Fluxonium (dephasing-biased)",
+      "short": "Fluxonium",
+      "architecture": "2D heavy-fluxonium",
+      "p_X": 2e-05,
+      "p_Z": 0.00056,
+      "p_Y": 1.5e-05,
+      "p_leakage": 8e-06,
+      "p_correlated": 1e-06,
+      "T1_us": 800.0,
+      "T2_us": 400.0,
+      "gate_time_ns": 60.0,
+      "readout_error": 0.012,
+      "p_gate_2q": 0.005,
+      "citation": "Nguyen et al. 2019; Somoroff et al. 2023 (high-bias regime).",
+      "bias_eta": 16.0,
+      "p_1q_total": 0.0005949999999999999
+    },
+    {
+      "name": "Ideal biased material (upper bound)",
+      "short": "Ideal-biased",
+      "architecture": "hypothetical engineered-bias qubit",
+      "p_X": 5e-07,
+      "p_Z": 0.001,
+      "p_Y": 5e-07,
+      "p_leakage": 1e-07,
+      "p_correlated": 1e-08,
+      "T1_us": 5000.0,
+      "T2_us": 3000.0,
+      "gate_time_ns": 25.0,
+      "readout_error": 0.003,
+      "p_gate_2q": 0.005,
+      "citation": "Hypothetical cat-qubit-like bias upper bound (eta ~ 1000).",
+      "bias_eta": 1000.0,
+      "p_1q_total": 0.001001
+    }
+  ],
+  "fits": {
+    "Ta/sapphire": {
+      "A": 0.018364440258900876,
+      "alpha_css": 0.38564257955349174,
+      "alpha_xzzx": 0.4684418016969419,
+      "bias_eta": 3.0
+    },
+    "Nb/Si": {
+      "A": 0.02367677921304429,
+      "alpha_css": 0.3310999068304295,
+      "alpha_xzzx": 0.36913422302566323,
+      "bias_eta": 1.8
+    },
+    "Al (legacy)": {
+      "A": 0.029454678210654457,
+      "alpha_css": 0.24194234908745005,
+      "alpha_xzzx": 0.2543478241314568,
+      "bias_eta": 1.2999999999999998
+    },
+    "Fluxonium": {
+      "A": 0.02365251817206232,
+      "alpha_css": 0.368685961912467,
+      "alpha_xzzx": 0.5684599222410522,
+      "bias_eta": 15.999999999999996
+    },
+    "Ideal-biased": {
+      "A": 0.011015795937112794,
+      "alpha_css": 0.41470041224593185,
+      "alpha_xzzx": 0.9745459687779399,
+      "bias_eta": 1000.0000000000001
+    }
+  },
+  "lattice_surgery_cnot_d7": {
+    "Ta/sapphire": {
+      "distance": 7,
+      "rounds": 14,
+      "time_ns": 14000.0,
+      "per_round_ler": 0.0012522263951348367,
+      "cnot_logical_error": 0.051265668789159724
+    },
+    "Nb/Si": {
+      "distance": 7,
+      "rounds": 14,
+      "time_ns": 14000.0,
+      "per_round_ler": 0.0023789258410962244,
+      "cnot_logical_error": 0.0951932728018553
+    },
+    "Al (legacy)": {
+      "distance": 7,
+      "rounds": 14,
+      "time_ns": 14000.0,
+      "per_round_ler": 0.005058086148452934,
+      "cnot_logical_error": 0.19182665354787543
+    },
+    "Fluxonium": {
+      "distance": 7,
+      "rounds": 14,
+      "time_ns": 14000.0,
+      "per_round_ler": 0.0018100149457371262,
+      "cnot_logical_error": 0.07326674912848774
+    },
+    "Ideal-biased": {
+      "distance": 7,
+      "rounds": 14,
+      "time_ns": 14000.0,
+      "per_round_ler": 0.0006021712998316997,
+      "cnot_logical_error": 0.024981479194756795
+    }
+  },
+  "resource_estimates": {
+    "RSA-2048": {
+      "Ta/sapphire": {
+        "distance": 63,
+        "code": "css",
+        "physical_per_logical": 7937,
+        "total_physical_qubits": 32525826
+      },
+      "Nb/Si": {
+        "distance": 73,
+        "code": "css",
+        "physical_per_logical": 10657,
+        "total_physical_qubits": 43672386
+      },
+      "Al (legacy)": {
+        "distance": 99,
+        "code": "css",
+        "physical_per_logical": 19601,
+        "total_physical_qubits": 80324898
+      },
+      "Fluxonium": {
+        "distance": 43,
+        "code": "xzzx",
+        "physical_per_logical": 3697,
+        "total_physical_qubits": 15150306
+      },
+      "Ideal-biased": {
+        "distance": 25,
+        "code": "xzzx",
+        "physical_per_logical": 1249,
+        "total_physical_qubits": 5118402
+      }
+    },
+    "FeMoco": {
+      "Ta/sapphire": {
+        "distance": 51,
+        "code": "css",
+        "physical_per_logical": 5201,
+        "total_physical_qubits": 10402000
+      },
+      "Nb/Si": {
+        "distance": 59,
+        "code": "css",
+        "physical_per_logical": 6961,
+        "total_physical_qubits": 13922000
+      },
+      "Al (legacy)": {
+        "distance": 81,
+        "code": "css",
+        "physical_per_logical": 13121,
+        "total_physical_qubits": 26242000
+      },
+      "Fluxonium": {
+        "distance": 35,
+        "code": "xzzx",
+        "physical_per_logical": 2449,
+        "total_physical_qubits": 4898000
+      },
+      "Ideal-biased": {
+        "distance": 21,
+        "code": "xzzx",
+        "physical_per_logical": 881,
+        "total_physical_qubits": 1762000
+      }
+    }
+  },
+  "algorithms": [
+    {
+      "name": "Shor \u00b7 RSA-2048",
+      "short": "RSA-2048",
+      "target_ler": 1e-12,
+      "n_logical": 4098,
+      "citation": "Gidney & Ekera, Quantum 5, 433 (2021)"
+    },
+    {
+      "name": "FeMoco simulation (QPE)",
+      "short": "FeMoco",
+      "target_ler": 1e-10,
+      "n_logical": 2000,
+      "citation": "Reiher et al. PNAS 2017; von Burg et al. 2021"
+    }
+  ]
+}

@@ -13,11 +13,14 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppWorkspaceRouteImport } from './routes/_app.workspace'
 import { Route as AppTopologyRouteImport } from './routes/_app.topology'
+import { Route as AppSurfaceCodeRouteImport } from './routes/_app.surface-code'
 import { Route as AppResultsRouteImport } from './routes/_app.results'
 import { Route as AppQecRouteImport } from './routes/_app.qec'
 import { Route as AppMaterialsRouteImport } from './routes/_app.materials'
+import { Route as AppCodeDesignerRouteImport } from './routes/_app.code-designer'
 import { Route as AppBenchmarksRouteImport } from './routes/_app.benchmarks'
 import { Route as AppAgentRouteImport } from './routes/_app.agent'
+import { Route as AppAdvantageRouteImport } from './routes/_app.advantage'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -38,6 +41,11 @@ const AppTopologyRoute = AppTopologyRouteImport.update({
   path: '/topology',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSurfaceCodeRoute = AppSurfaceCodeRouteImport.update({
+  id: '/surface-code',
+  path: '/surface-code',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppResultsRoute = AppResultsRouteImport.update({
   id: '/results',
   path: '/results',
@@ -53,6 +61,11 @@ const AppMaterialsRoute = AppMaterialsRouteImport.update({
   path: '/materials',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCodeDesignerRoute = AppCodeDesignerRouteImport.update({
+  id: '/code-designer',
+  path: '/code-designer',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppBenchmarksRoute = AppBenchmarksRouteImport.update({
   id: '/benchmarks',
   path: '/benchmarks',
@@ -63,24 +76,35 @@ const AppAgentRoute = AppAgentRouteImport.update({
   path: '/agent',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdvantageRoute = AppAdvantageRouteImport.update({
+  id: '/advantage',
+  path: '/advantage',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/advantage': typeof AppAdvantageRoute
   '/agent': typeof AppAgentRoute
   '/benchmarks': typeof AppBenchmarksRoute
+  '/code-designer': typeof AppCodeDesignerRoute
   '/materials': typeof AppMaterialsRoute
   '/qec': typeof AppQecRoute
   '/results': typeof AppResultsRoute
+  '/surface-code': typeof AppSurfaceCodeRoute
   '/topology': typeof AppTopologyRoute
   '/workspace': typeof AppWorkspaceRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/advantage': typeof AppAdvantageRoute
   '/agent': typeof AppAgentRoute
   '/benchmarks': typeof AppBenchmarksRoute
+  '/code-designer': typeof AppCodeDesignerRoute
   '/materials': typeof AppMaterialsRoute
   '/qec': typeof AppQecRoute
   '/results': typeof AppResultsRoute
+  '/surface-code': typeof AppSurfaceCodeRoute
   '/topology': typeof AppTopologyRoute
   '/workspace': typeof AppWorkspaceRoute
 }
@@ -88,11 +112,14 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
+  '/_app/advantage': typeof AppAdvantageRoute
   '/_app/agent': typeof AppAgentRoute
   '/_app/benchmarks': typeof AppBenchmarksRoute
+  '/_app/code-designer': typeof AppCodeDesignerRoute
   '/_app/materials': typeof AppMaterialsRoute
   '/_app/qec': typeof AppQecRoute
   '/_app/results': typeof AppResultsRoute
+  '/_app/surface-code': typeof AppSurfaceCodeRoute
   '/_app/topology': typeof AppTopologyRoute
   '/_app/workspace': typeof AppWorkspaceRoute
 }
@@ -100,32 +127,41 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/advantage'
     | '/agent'
     | '/benchmarks'
+    | '/code-designer'
     | '/materials'
     | '/qec'
     | '/results'
+    | '/surface-code'
     | '/topology'
     | '/workspace'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/advantage'
     | '/agent'
     | '/benchmarks'
+    | '/code-designer'
     | '/materials'
     | '/qec'
     | '/results'
+    | '/surface-code'
     | '/topology'
     | '/workspace'
   id:
     | '__root__'
     | '/'
     | '/_app'
+    | '/_app/advantage'
     | '/_app/agent'
     | '/_app/benchmarks'
+    | '/_app/code-designer'
     | '/_app/materials'
     | '/_app/qec'
     | '/_app/results'
+    | '/_app/surface-code'
     | '/_app/topology'
     | '/_app/workspace'
   fileRoutesById: FileRoutesById
@@ -165,6 +201,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTopologyRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/surface-code': {
+      id: '/_app/surface-code'
+      path: '/surface-code'
+      fullPath: '/surface-code'
+      preLoaderRoute: typeof AppSurfaceCodeRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/results': {
       id: '/_app/results'
       path: '/results'
@@ -186,6 +229,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMaterialsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/code-designer': {
+      id: '/_app/code-designer'
+      path: '/code-designer'
+      fullPath: '/code-designer'
+      preLoaderRoute: typeof AppCodeDesignerRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/benchmarks': {
       id: '/_app/benchmarks'
       path: '/benchmarks'
@@ -200,25 +250,38 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAgentRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/advantage': {
+      id: '/_app/advantage'
+      path: '/advantage'
+      fullPath: '/advantage'
+      preLoaderRoute: typeof AppAdvantageRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppAdvantageRoute: typeof AppAdvantageRoute
   AppAgentRoute: typeof AppAgentRoute
   AppBenchmarksRoute: typeof AppBenchmarksRoute
+  AppCodeDesignerRoute: typeof AppCodeDesignerRoute
   AppMaterialsRoute: typeof AppMaterialsRoute
   AppQecRoute: typeof AppQecRoute
   AppResultsRoute: typeof AppResultsRoute
+  AppSurfaceCodeRoute: typeof AppSurfaceCodeRoute
   AppTopologyRoute: typeof AppTopologyRoute
   AppWorkspaceRoute: typeof AppWorkspaceRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAdvantageRoute: AppAdvantageRoute,
   AppAgentRoute: AppAgentRoute,
   AppBenchmarksRoute: AppBenchmarksRoute,
+  AppCodeDesignerRoute: AppCodeDesignerRoute,
   AppMaterialsRoute: AppMaterialsRoute,
   AppQecRoute: AppQecRoute,
   AppResultsRoute: AppResultsRoute,
+  AppSurfaceCodeRoute: AppSurfaceCodeRoute,
   AppTopologyRoute: AppTopologyRoute,
   AppWorkspaceRoute: AppWorkspaceRoute,
 }
@@ -232,3 +295,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

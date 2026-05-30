@@ -1,5 +1,6 @@
-import type { CongestionCell } from "@/data/mock";
 import { cn } from "@/lib/utils";
+
+export type CongestionCell = { x: number; y: number; v: number };
 
 export function Heatmap({ cells, cols = 12, rows = 8, title, className, accent = "violet" }: { cells: CongestionCell[]; cols?: number; rows?: number; title?: string; className?: string; accent?: "violet" | "cyan" }) {
   const base = accent === "violet" ? "oklch(0.7 0.21 295)" : "oklch(0.82 0.16 200)";

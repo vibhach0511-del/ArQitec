@@ -1,0 +1,54 @@
+{
+  "records": [
+    {
+      "d": 3,
+      "physical_qubits": 17,
+      "rounds": 3,
+      "logical_error_per_round": 0.005945415725135184,
+      "lambda_suppression": 1.0,
+      "classical_exact_time_s": 0.000131072,
+      "classical_stim_time_s": 0.020139,
+      "qpu_projected_time_s": 3e-06
+    },
+    {
+      "d": 5,
+      "physical_qubits": 49,
+      "rounds": 5,
+      "logical_error_per_round": 0.0026019398063661936,
+      "lambda_suppression": 2.285,
+      "classical_exact_time_s": 562949.953421312,
+      "classical_stim_time_s": 0.109675,
+      "qpu_projected_time_s": 4.9999999999999996e-06
+    },
+    {
+      "d": 7,
+      "physical_qubits": 97,
+      "rounds": 7,
+      "logical_error_per_round": 0.0012051073549370628,
+      "lambda_suppression": 2.159,
+      "classical_exact_time_s": 1.584563250285287e+20,
+      "classical_stim_time_s": 0.353954,
+      "qpu_projected_time_s": 7e-06
+    },
+    {
+      "d": 9,
+      "physical_qubits": 161,
+      "rounds": 9,
+      "logical_error_per_round": 0.000555237709238543,
+      "lambda_suppression": 2.17,
+      "classical_exact_time_s": 2.923003274661806e+39,
+      "classical_stim_time_s": 0.805069,
+      "qpu_projected_time_s": 9e-06
+    }
+  ],
+  "hardware": null,
+  "gain": {
+    "atDistance": 9,
+    "atQubits": 161,
+    "classicalTimeS": 2.923003274661806e+39,
+    "qpuTimeS": 9e-06,
+    "speedup": 3.2477814162908955e+44,
+    "finalLogicalError": 0.000555237709238543,
+    "meanLambda": 1.9
+  }
+}

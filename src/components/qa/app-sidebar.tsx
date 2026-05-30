@@ -8,6 +8,9 @@ import {
   SplitSquareHorizontal,
   Sparkles,
   CircuitBoard,
+  SlidersHorizontal,
+  Zap,
+  Grid2x2,
 } from "lucide-react";
 import {
   Sidebar,
@@ -29,6 +32,9 @@ const nav = [
   { title: "Topology", url: "/topology", icon: Network },
   { title: "Benchmarks", url: "/benchmarks", icon: Gauge },
   { title: "QEC Advisor", url: "/qec", icon: ShieldCheck },
+  { title: "Surface Code", url: "/surface-code", icon: Grid2x2 },
+  { title: "Code Designer", url: "/code-designer", icon: SlidersHorizontal },
+  { title: "Quantum vs Classical", url: "/advantage", icon: Zap },
   { title: "Results", url: "/results", icon: SplitSquareHorizontal },
   { title: "AI Agent", url: "/agent", icon: Sparkles },
 ] as const;

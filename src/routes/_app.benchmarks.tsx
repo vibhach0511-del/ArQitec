@@ -1,60 +1,89 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { WORKLOADS, CONGESTION_BASELINE, CONGESTION_OPTIMIZED } from "@/data/mock";
+import { useMemo } from "react";
+import { QUANTUM_WORKLOADS, getTopology } from "@/lib/qa/data";
+import { estimateRouting } from "@/lib/qa/engine";
 import { Panel, SectionHeader, MetricCard } from "@/components/qa/primitives";
-import { Heatmap } from "@/components/qa/heatmap";
+import { Heatmap, type CongestionCell } from "@/components/qa/heatmap";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { useQA } from "@/lib/qa/store";
+import type { WorkloadId } from "@/lib/qa/types";
 
 export const Route = createFileRoute("/_app/benchmarks")({
   head: () => ({ meta: [{ title: "Workload Benchmarks — Q-Architect" }, { name: "description", content: "QAOA, VQE, QFT, random circuit, and QEC syndrome benchmarks baseline vs optimized." }] }),
   component: BenchmarksPage,
 });
 
+function buildCongestion(level: number): CongestionCell[] {
+  const cells: CongestionCell[] = [];
+  for (let y = 0; y < 8; y++)
+    for (let x = 0; x < 12; x++) {
+      const cx = 5.5, cy = 3.5;
+      const d = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+      const v = Math.max(0.04, Math.min(1, level * (1.15 - d * 0.12) + Math.sin(x * 0.7 + y) * 0.06));
+      cells.push({ x, y, v });
+    }
+  return cells;
+}
+
 function BenchmarksPage() {
-  const [active, setActive] = useState(WORKLOADS[0].id);
-  const w = WORKLOADS.find(x => x.id === active)!;
+  const qa = useQA();
+  const benchmarks = qa.result.benchmarks;
 
-  const barData = [
-    { metric: "SWAP", baseline: w.baseline.swap, optimized: w.optimized.swap },
-    { metric: "Depth", baseline: w.baseline.depth, optimized: w.optimized.depth },
-    { metric: "Fidelity ×10", baseline: w.baseline.fidelity * 10, optimized: w.optimized.fidelity * 10 },
-    { metric: "LogErr ×1k", baseline: w.baseline.logErr * 1000, optimized: w.optimized.logErr * 1000 },
-    { metric: "Congestion ×100", baseline: w.baseline.congestion * 100, optimized: w.optimized.congestion * 100 },
-  ];
+  const barData = useMemo(
+    () =>
+      benchmarks.map((b) => ({
+        metric: b.label,
+        baseline: 100,
+        optimized: b.baseline === 0 ? 0 : Math.round((b.optimized / b.baseline) * 100),
+      })),
+    [benchmarks],
+  );
 
-  const pct = (a: number, b: number) => `${(((b - a) / a) * 100).toFixed(1)}%`;
+  const baseCongestion = useMemo(() => estimateRouting(getTopology("square"), qa.workload).congestion, [qa.workload]);
+  const optCongestion = qa.result.routing.congestion;
+
+  const get = (key: string) => benchmarks.find((b) => b.key === key)!;
+  const delta = (key: string) => {
+    const b = get(key);
+    const change = ((b.optimized - b.baseline) / Math.abs(b.baseline || 1)) * 100;
+    const improved = b.betterDirection === "lower" ? change < 0 : change > 0;
+    return { text: `${change > 0 ? "+" : "−"}${Math.abs(change).toFixed(0)}%`, tone: improved ? ("good" as const) : ("warn" as const) };
+  };
 
   return (
     <div className="p-6">
       <SectionHeader
         eyebrow="Workload Benchmark"
         title="Baseline vs Q-Architect optimized"
-        description="Synthetic mock benchmarks. Select a workload to compare SWAPs, depth, fidelity, logical error, and routing congestion."
+        description="Square-grid baseline vs the current topology. Select a workload to recompute SWAPs, depth, fidelity, crosstalk, and routing congestion."
       />
       <div className="flex flex-wrap gap-1.5 mb-4">
-        {WORKLOADS.map(wl => (
-          <button key={wl.id} onClick={() => setActive(wl.id)}
-            className={`mono text-[11px] uppercase tracking-[0.14em] rounded border px-2.5 py-1.5 transition ${active === wl.id ? "border-cyan/50 bg-cyan/10 text-cyan" : "border-border/60 text-muted-foreground hover:text-foreground"}`}>
+        {QUANTUM_WORKLOADS.map((wl) => (
+          <button
+            key={wl.id}
+            onClick={() => qa.setWorkload(wl.id as WorkloadId)}
+            className={`mono text-[11px] uppercase tracking-[0.14em] rounded border px-2.5 py-1.5 transition ${qa.config.workloadId === wl.id ? "border-cyan/50 bg-cyan/10 text-cyan" : "border-border/60 text-muted-foreground hover:text-foreground"}`}
+          >
             {wl.name}
           </button>
         ))}
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
-        <MetricCard label="SWAP count" value={w.optimized.swap} delta={pct(w.baseline.swap, w.optimized.swap)} tone="good" hint={`base ${w.baseline.swap}`} />
-        <MetricCard label="Circuit depth" value={w.optimized.depth} delta={pct(w.baseline.depth, w.optimized.depth)} tone="good" hint={`base ${w.baseline.depth}`} />
-        <MetricCard label="Est. fidelity" value={w.optimized.fidelity.toFixed(1)} unit="%" delta={`+${(w.optimized.fidelity - w.baseline.fidelity).toFixed(1)}`} tone="good" />
-        <MetricCard label="Logical err" value={w.optimized.logErr.toExponential(2)} delta={pct(w.baseline.logErr, w.optimized.logErr)} tone="good" />
-        <MetricCard label="Congestion" value={w.optimized.congestion.toFixed(2)} delta={pct(w.baseline.congestion, w.optimized.congestion)} tone="good" />
+        <MetricCard label="SWAP count" value={get("swap").optimized} delta={delta("swap").text} tone={delta("swap").tone} hint={`base ${get("swap").baseline}`} />
+        <MetricCard label="Routed depth" value={get("depth").optimized} delta={delta("depth").text} tone={delta("depth").tone} hint={`base ${get("depth").baseline}`} />
+        <MetricCard label="Fidelity score" value={get("fidelity").optimized} unit="/100" delta={delta("fidelity").text} tone={delta("fidelity").tone} />
+        <MetricCard label="Crosstalk score" value={get("crosstalk").optimized} unit="/100" delta={delta("crosstalk").text} tone={delta("crosstalk").tone} />
+        <MetricCard label="Arch. score" value={get("score").optimized} unit="/100" delta={delta("score").text} tone={delta("score").tone} />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <Panel className="xl:col-span-2" title="Baseline vs Optimized" subtitle={w.name}>
+        <Panel className="xl:col-span-2" title="Baseline vs Optimized" subtitle={`${qa.workload.name} · indexed to baseline = 100`}>
           <div className="p-3 h-[340px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barData} margin={{ top: 16, right: 16, left: 0, bottom: 8 }}>
                 <CartesianGrid stroke="oklch(0.32 0.03 255 / 0.3)" vertical={false} />
-                <XAxis dataKey="metric" tick={{ fill: "oklch(0.68 0.03 250)", fontSize: 11, fontFamily: "JetBrains Mono" }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="metric" tick={{ fill: "oklch(0.68 0.03 250)", fontSize: 10, fontFamily: "JetBrains Mono" }} axisLine={false} tickLine={false} interval={0} angle={-12} textAnchor="end" height={50} />
                 <YAxis tick={{ fill: "oklch(0.68 0.03 250)", fontSize: 11, fontFamily: "JetBrains Mono" }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={{ background: "oklch(0.22 0.025 252)", border: "1px solid oklch(0.3 0.03 255 / 0.6)", borderRadius: 8, fontFamily: "JetBrains Mono", fontSize: 12 }} />
                 <Legend wrapperStyle={{ fontFamily: "JetBrains Mono", fontSize: 11 }} />
@@ -64,10 +93,10 @@ function BenchmarksPage() {
             </ResponsiveContainer>
           </div>
         </Panel>
-        <Panel title="Routing congestion map" subtitle="Per-region traffic (mock)">
+        <Panel title="Routing congestion map" subtitle="Per-region traffic (modeled)">
           <div className="p-3 space-y-3">
-            <Heatmap cells={CONGESTION_BASELINE} title="Baseline · square grid" accent="violet" />
-            <Heatmap cells={CONGESTION_OPTIMIZED} title="Optimized · Q-Architect" accent="cyan" />
+            <Heatmap cells={buildCongestion(baseCongestion)} title="Baseline · square grid" accent="violet" />
+            <Heatmap cells={buildCongestion(optCongestion)} title={`Optimized · ${qa.topology.name}`} accent="cyan" />
           </div>
         </Panel>
       </div>
