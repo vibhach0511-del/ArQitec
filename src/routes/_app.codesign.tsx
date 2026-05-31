@@ -1,12 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Atom, Cpu, Snowflake, Target as TargetIcon, Check, Trophy, TriangleAlert, ShieldCheck, X, CornerDownRight, Gauge, FlaskConical, Layers, Rocket } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from "recharts";
+import { LineChart, Line, BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from "recharts";
 import { Panel, SectionHeader, MetricCard } from "@/components/qa/primitives";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import {
-  STACK_BUCKETS, SCALE_REFERENCE, bestStack, combinationCount, searchProjection, sweepProjection,
+  STACK_BUCKETS, bestStack, combinationCount, searchProjection,
+  measuredSweep, measuredBarComparison, barColorForSearchLabel, hasMeasuredBenchmark, ibmHardwareSamples,
+  SEARCH_PATH_LABELS, GROVER_SCALING_NOTE,
 } from "@/lib/qa/materials-search";
 import {
   CONTROL_OPTIONS,
@@ -88,9 +90,19 @@ function CodesignPage() {
   // Combinatorial materials search (XpyQ) projection.
   const combos = combinationCount();
   const proj = useMemo(() => searchProjection(combos), [combos]);
-  const scaleProj = useMemo(() => searchProjection(SCALE_REFERENCE), []);
   const best = useMemo(() => bestStack(target), [target]);
-  const sweep = useMemo(() => sweepProjection(), []);
+  const sweep = useMemo(() => measuredSweep(), []);
+  const barData = useMemo(() => measuredBarComparison(), []);
+  const barChartData = useMemo(
+    () => (barData ?? []).map((b) => ({ name: b.label, time: b.timeS, source: b.source })),
+    [barData],
+  );
+  const barYMax = useMemo(
+    () => (barChartData.length ? Math.max(...barChartData.map((b) => b.time)) * 1.15 : 1),
+    [barChartData],
+  );
+  const ibmSamples = useMemo(() => ibmHardwareSamples(), []);
+  const measured = hasMeasuredBenchmark();
   const confColor = output.confidence === "high" ? "text-neon-green" : output.confidence === "medium" ? "text-amber" : "text-danger";
 
   return (
@@ -333,20 +345,60 @@ function CodesignPage() {
       <div className="mb-2 text-[12px] text-muted-foreground">
         Search every material stack <span className="mono text-foreground">
           {STACK_BUCKETS.map((b) => b.items.length).join(" × ")}
-        </span> (electrode × substrate × junction × superinductor) for the best QEC fit, and project the cost classically vs on a quantum search.
+        </span> (electrode × substrate × junction × superinductor) for the best QEC fit.
+        {measured ? (
+          <span className="ml-1 text-neon-green">Measured benchmarks loaded.</span>
+        ) : (
+          <span className="ml-1 text-amber">Run <span className="mono">python -m qec_pipeline.materials_search_benchmark --hardware</span> for live API numbers.</span>
+        )}
+        <span className="block mt-1 text-[11px] text-muted-foreground/90">{GROVER_SCALING_NOTE}</span>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 mb-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-4">
         <MetricCard label="Combinations" value={fmtN(combos)} unit="stacks" tone="neutral" hint="E×S×J×SI" />
-        <MetricCard label="Classical CPU (8-core)" value={fmtTime(proj.cpuTimeS)} tone="warn" hint="linear in N" />
-        <MetricCard label="Classical GPU (2048×)" value={fmtTime(proj.gpuTimeS)} tone="neutral" hint="linear in N" />
-        <MetricCard label="Quantum (Grover)" value={fmtTime(proj.quantumS)} tone="good" hint={`${proj.groverIters} iters ~√N`} />
-        <MetricCard label={`Speedup vs GPU @ ${fmtN(SCALE_REFERENCE)}`} value={`${scaleProj.speedupGpu.toFixed(0)}×`} tone="good" hint="at full-catalogue scale" />
+        <MetricCard label={SEARCH_PATH_LABELS.classical} value={fmtTime(proj.cpuTimeS)} tone="warn" hint={proj.measured ? "all stacks @ measured per-eval cost" : "projected"} />
+        <MetricCard label="Classical GPU" value={fmtTime(proj.gpuTimeS)} tone="neutral" hint="parallel O(N) projection" />
+        <MetricCard label={SEARCH_PATH_LABELS.xpyq} value={fmtTime(proj.xpyqTimeS)} tone="good" hint={`${proj.groverIters}× measured XpyQ per-stack API · ~√N`} />
+        <MetricCard label={SEARCH_PATH_LABELS.ibm} value={fmtTime(proj.ibmTimeS)} tone="good" hint={`${proj.groverIters}× measured IBM oracle exec · ~√N`} />
+        <MetricCard label="Speedup XpyQ vs CPU" value={`${proj.speedupCpu.toFixed(1)}×`} tone="good" hint={`Grover-scaled vs O(N) @ N=${fmtN(combos)}`} />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <Panel className="xl:col-span-2" title="Search time vs combination count" subtitle="Classical scales as N; quantum search as √N · log–log"
-          action={<span className="mono text-[10px] uppercase tracking-[0.18em] text-cyan inline-flex items-center gap-1"><Rocket className="h-3 w-3" /> via XpyQ</span>}>
+        <Panel className="xl:col-span-1" title="Side-by-side @ current N" subtitle="O(N) full enum vs Grover-scaled √N · measured per-oracle rates"
+          action={<span className="mono text-[10px] uppercase tracking-[0.18em] text-cyan inline-flex items-center gap-1"><Rocket className="h-3 w-3" /> live APIs</span>}>
+          <div className="p-3 h-[320px]">
+            {barChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={barChartData} margin={{ top: 16, right: 16, left: 8, bottom: 48 }}>
+                  <CartesianGrid stroke="oklch(0.32 0.03 255 / 0.3)" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fill: "oklch(0.68 0.03 250)", fontSize: 9, fontFamily: "JetBrains Mono" }} axisLine={false} tickLine={false} interval={0} angle={-12} textAnchor="end" height={56} />
+                  <YAxis domain={[0, barYMax]} tickFormatter={(v: number) => fmtTime(v)} tick={{ fill: "oklch(0.68 0.03 250)", fontSize: 10, fontFamily: "JetBrains Mono" }} axisLine={false} tickLine={false} width={56} />
+                  <Tooltip
+                    formatter={(v: number, _name: string, item: { payload?: { name: string; source: string } }) => [
+                      fmtTime(v),
+                      item.payload?.name ?? "Search time",
+                    ]}
+                    labelFormatter={(label: string) => label}
+                    contentStyle={{ background: "oklch(0.22 0.025 252)", border: "1px solid oklch(0.3 0.03 255 / 0.6)", borderRadius: 8, fontFamily: "JetBrains Mono", fontSize: 11 }}
+                    cursor={{ fill: "oklch(0.3 0.03 255 / 0.15)" }}
+                  />
+                  <Bar dataKey="time" name="Search time" radius={[4, 4, 0, 0]} isAnimationActive={false}>
+                    {barChartData.map((entry) => (
+                      <Cell key={entry.name} fill={barColorForSearchLabel(entry.name)} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-sm text-muted-foreground text-center px-4">
+                No benchmark data yet. Run the materials search benchmark script to populate measured API timings.
+              </div>
+            )}
+          </div>
+        </Panel>
+
+        <Panel className="xl:col-span-1" title="Search time vs combination count" subtitle="O(N) classical vs Grover-scaled quantum · measured oracle rates"
+          action={<span className="mono text-[10px] uppercase tracking-[0.18em] text-cyan inline-flex items-center gap-1"><Rocket className="h-3 w-3" /> scaling</span>}>
           <div className="p-3 h-[320px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={sweep} margin={{ top: 16, right: 16, left: 8, bottom: 8 }}>
@@ -356,9 +408,10 @@ function CodesignPage() {
                 <Tooltip formatter={(v: number) => fmtTime(v)} labelFormatter={(v: number) => `N = ${v.toLocaleString()}`} contentStyle={{ background: "oklch(0.22 0.025 252)", border: "1px solid oklch(0.3 0.03 255 / 0.6)", borderRadius: 8, fontFamily: "JetBrains Mono", fontSize: 11 }} />
                 <Legend wrapperStyle={{ fontFamily: "JetBrains Mono", fontSize: 10 }} />
                 <ReferenceLine x={combos} stroke="oklch(0.78 0.18 150)" strokeDasharray="4 4" label={{ value: "now", fill: "oklch(0.78 0.18 150)", fontSize: 9, position: "insideTopLeft" }} />
-                <Line type="monotone" dataKey="cpu" name="Classical CPU" stroke="oklch(0.7 0.22 25)" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="classical" name={SEARCH_PATH_LABELS.classical} stroke="oklch(0.7 0.22 25)" strokeWidth={2} dot={false} />
                 <Line type="monotone" dataKey="gpu" name="Classical GPU" stroke="oklch(0.82 0.16 75)" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="quantum" name="Quantum (Grover)" stroke="oklch(0.82 0.16 200)" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="xpyq" name={SEARCH_PATH_LABELS.xpyq} stroke="oklch(0.82 0.16 200)" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="ibm" name={SEARCH_PATH_LABELS.ibm} stroke="oklch(0.78 0.18 150)" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -379,6 +432,16 @@ function CodesignPage() {
                   {best.feasible ? "feasible" : "infeasible"}
                 </span>
               </div>
+              {ibmSamples.length > 0 && (
+                <div className="border-t border-border/60 pt-2 space-y-1">
+                  <div className="mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">IBM hardware samples</div>
+                  {ibmSamples.map((s) => (
+                    <div key={s.job_id} className="mono text-[9px] text-muted-foreground truncate" title={s.stack_id}>
+                      {s.backend} · {fmtTime(s.execution_s ?? s.wallclock_s)} exec · {s.stack_id.split("|")[0]}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             <div className="p-6 text-sm text-muted-foreground text-center">No material stack available.</div>

@@ -1,13 +1,5 @@
 // ArQiteQ — combinatorial materials search (quantum vs classical), via XpyQ.
-// Searches material STACKS (electrode x substrate x junction x superinductor)
-// for the best QEC fit, and projects the cost of the search:
-//   - classical brute force on CPU / GPU (linear in the combination count N)
-//   - quantum unstructured search (Grover) — ~sqrt(N) oracle calls
-// to quantify the quantum speedup.
-//
-// Deterministic projection. TODO(integration): submit the real search to XpyQ
-// (acceleration endpoints / IBM Quantum) — params below are the single place to
-// swap in measured per-evaluation costs.
+// Measured benchmarks from qec_pipeline/materials_search_benchmark.py when available.
 
 import { MATERIALS, type QubitMaterial } from "./materials-data";
 import {
@@ -17,6 +9,16 @@ import {
   requiredDistance,
   type CodesignTarget,
 } from "./codesign";
+
+import { MATERIALS_SEARCH_BENCHMARK } from "./materials-search-data";
+
+function loadBenchmark() {
+  return MATERIALS_SEARCH_BENCHMARK;
+}
+
+export function hasMeasuredBenchmark(): boolean {
+  return loadBenchmark() !== null;
+}
 
 // Role buckets (oxide / loss materials are excluded as contaminants).
 export const ELECTRODES = MATERIALS.filter((m) => /electrode/.test(m.role));
@@ -63,7 +65,6 @@ export function bestStack(target: CodesignTarget): StackResult | null {
     for (const s of SUBSTRATES)
       for (const j of JUNCTIONS)
         for (const si of SUPERINDUCTORS) {
-          // Electrode dominates gate error; junction + substrate add loss.
           const effectiveP2q = 0.6 * e.pGate2q + 0.2 * j.pGate2q + 0.2 * s.pGate2q;
           const biasEta = Math.max(e.biasEta, si.biasEta);
           const code = recommendCode({ pGate2q: effectiveP2q, biasEta });
@@ -83,46 +84,107 @@ export function bestStack(target: CodesignTarget): StackResult | null {
   return best;
 }
 
-// ----------------------------------------------------- cost projection
+// ----------------------------------------------------- cost projection (fallback)
 
 export const SEARCH_PARAMS = {
-  evalTimeS: 0.5,    // per-stack QEC evaluation (Stim + decoder sim)
-  cpuCores: 8,       // workstation cores
-  gpuParallel: 2048, // GPU parallel evaluations
-  qpuOracleS: 0.05,  // per Grover amplitude-amplification iteration
+  evalTimeS: 0.5,
+  cpuCores: 8,
+  gpuParallel: 2048,
+  qpuOracleS: 0.05,
 };
 
-/** Reference scale for the "at scale" speedup callout (e.g. a full MP pull). */
 export const SCALE_REFERENCE = 1_000_000;
+
+/** Display labels — Grover-scaled paths are projected from measured per-oracle API times. */
+export const SEARCH_PATH_LABELS = {
+  classical: "Classical CPU (O(N) enum)",
+  xpyq: "XpyQ (Grover-scaled)",
+  ibm: "IBM Quantum (Grover-scaled)",
+} as const;
+
+export const GROVER_SCALING_NOTE =
+  "Measured per-stack oracle via live API × ceil(π/4·√N) — not a full Grover search job.";
 
 export interface SearchProjection {
   combos: number;
   cpuTimeS: number;
   gpuTimeS: number;
-  quantumS: number;
+  xpyqTimeS: number;
+  ibmTimeS: number;
   groverIters: number;
   speedupCpu: number;
-  speedupGpu: number;
+  speedupXpyq: number;
+  measured: boolean;
 }
 
-export function searchProjection(N: number, p = SEARCH_PARAMS): SearchProjection {
-  const cpuTimeS = (N * p.evalTimeS) / p.cpuCores;
-  const gpuTimeS = (N * p.evalTimeS) / p.gpuParallel;
-  const groverIters = Math.ceil((Math.PI / 4) * Math.sqrt(N));
-  const quantumS = groverIters * p.qpuOracleS;
+export function searchProjection(N: number): SearchProjection {
+  const b = loadBenchmark();
+  const groverIters = b?.groverIters ?? Math.ceil((Math.PI / 4) * Math.sqrt(N));
+  const stackOracle = b?.classical.stackOracleS ?? b?.xpyq.perEvalS ?? SEARCH_PARAMS.evalTimeS;
+  if (b && N === b.combos) {
+    return {
+      combos: N,
+      cpuTimeS: b.classical.searchS ?? b.classical.totalWallS,
+      gpuTimeS: b.classical.gpuProjectedS,
+      xpyqTimeS: b.xpyq.groverS,
+      ibmTimeS: b.ibm.groverS,
+      groverIters: b.groverIters,
+      speedupCpu: (b.classical.searchS ?? b.classical.totalWallS) / b.xpyq.groverS,
+      speedupXpyq: (b.classical.searchS ?? b.classical.totalWallS) / b.ibm.groverS,
+      measured: true,
+    };
+  }
+  const perEval = stackOracle;
+  const perXpyq = b?.xpyq.perEvalS ?? SEARCH_PARAMS.qpuOracleS;
+  const perIbm = b?.ibm.perOracleS ?? SEARCH_PARAMS.qpuOracleS;
+  const cpuTimeS = N * perEval;
+  const gpuTimeS = cpuTimeS / SEARCH_PARAMS.gpuParallel;
+  const xpyqTimeS = groverIters * perXpyq;
+  const ibmTimeS = groverIters * perIbm;
   return {
-    combos: N, cpuTimeS, gpuTimeS, quantumS, groverIters,
-    speedupCpu: cpuTimeS / quantumS, speedupGpu: gpuTimeS / quantumS,
+    combos: N, cpuTimeS, gpuTimeS, xpyqTimeS, ibmTimeS, groverIters,
+    speedupCpu: cpuTimeS / xpyqTimeS,
+    speedupXpyq: cpuTimeS / ibmTimeS,
+    measured: Boolean(b),
   };
 }
 
-/** Sweep N across decades for the time-vs-combinations chart. */
-export function sweepProjection(): { n: number; cpu: number; gpu: number; quantum: number }[] {
-  const out: { n: number; cpu: number; gpu: number; quantum: number }[] = [];
+export function measuredBarComparison(): { label: string; timeS: number; source: string }[] | null {
+  const bars = loadBenchmark()?.barComparison ?? null;
+  if (!bars?.length) return null;
+  // Slowest → fastest so bar height decreases left-to-right.
+  return [...bars].sort((a, b) => b.timeS - a.timeS);
+}
+
+/** Stable bar colors keyed by path label (not chart position). */
+export function barColorForSearchLabel(label: string): string {
+  if (label.startsWith("Classical")) return "oklch(0.7 0.22 25)";
+  if (label.startsWith("XpyQ")) return "oklch(0.82 0.16 200)";
+  return "oklch(0.78 0.18 150)";
+}
+
+export function measuredSweep(): { n: number; classical: number; gpu: number; xpyq: number; ibm: number }[] {
+  const b = loadBenchmark();
+  if (b?.sweep?.length) return b.sweep;
+  return sweepProjectionFallback();
+}
+
+/** Fallback analytic sweep when benchmark file missing. */
+export function sweepProjectionFallback(): { n: number; classical: number; gpu: number; xpyq: number; ibm: number }[] {
+  const out: { n: number; classical: number; gpu: number; xpyq: number; ibm: number }[] = [];
   for (let e = 2; e <= 9; e++) {
     const n = 10 ** e;
     const pr = searchProjection(n);
-    out.push({ n, cpu: pr.cpuTimeS, gpu: pr.gpuTimeS, quantum: pr.quantumS });
+    out.push({ n, classical: pr.cpuTimeS, gpu: pr.gpuTimeS, xpyq: pr.xpyqTimeS, ibm: pr.ibmTimeS });
   }
   return out;
+}
+
+/** @deprecated use measuredSweep */
+export function sweepProjection(): { n: number; cpu: number; gpu: number; quantum: number }[] {
+  return measuredSweep().map((r) => ({ n: r.n, cpu: r.classical, gpu: r.gpu, quantum: r.xpyq }));
+}
+
+export function ibmHardwareSamples() {
+  return loadBenchmark()?.ibm.samples ?? [];
 }

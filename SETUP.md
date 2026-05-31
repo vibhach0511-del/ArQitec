@@ -19,7 +19,9 @@ conda activate qai   # zsh was initialized; open a new terminal if needed
 | 4 | yfinance, alpaca-py, polygon-api-client, cvxpy, pyportfolioopt, backtrader | DONE |
 | 5 | langchain, langchain-openai, chromadb | DONE |
 | 6 | chronos-forecasting, autogluon.timeseries | DONE |
-| 7 | IBM Quantum API key | DONE - saved via QiskitRuntimeService (channel `ibm_quantum_platform`); verified 3 open backends |
+| 7 | IBM Quantum API key | DONE - saved via QiskitRuntimeService; see [hello-world guide](https://quantum.cloud.ibm.com/docs/en/guides/hello-world) |
+| 7b | Materials Project `MP_API_KEY` | MANUAL - materialsproject.org dashboard |
+| 7c | XpyQ `XPYQ_API_KEY` | MANUAL - hackathon XpyQ Cloud |
 | 8 | Alpaca paper trading keys | MANUAL - sign up at alpaca.markets |
 | 9 | Polygon.io API key | MANUAL - sign up at polygon.io |
 | 10 | Clone track[N] starter repo | NOT PUBLIC - `github.com/qai-hackathon/*` 404s; distributed via Slack |
@@ -43,8 +45,10 @@ python baselines.py           # Track 1-4 baselines + PennyLane VQC + Chronos
 ## Manual steps remaining
 
 1. Create API keys (steps 7-9): copy `.env.example` to `.env` and fill values.
-   - IBM Quantum: `QiskitRuntimeService.save_account(channel="ibm_quantum", token=...)`
-   - Alpaca / Polygon: export the env vars (or load `.env`).
+   - IBM Quantum: `QiskitRuntimeService.save_account(token=...)` per [Run your first circuit on hardware](https://quantum.cloud.ibm.com/docs/en/guides/hello-world)
+   - Materials Project / XpyQ: set `MP_API_KEY`, `XPYQ_EMAIL`, and `XPYQ_API_KEY` in `.env`
+   - XpyQ dashboard: open [https://xpyq.vercel.app/functions](https://xpyq.vercel.app/functions) and sign in with `XPYQ_EMAIL` (instant sign-in, no email sent)
+   - Run materials search benchmark: `python -m qec_pipeline.materials_search_benchmark --hardware`
 2. Datasets (Drop 4 §2): download links are in the Slack `#datasets` channel
    (LOB tick data, earnings transcripts, volatility surface). OHLCV is available via
    `yfinance` / Alpaca already.

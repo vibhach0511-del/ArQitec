@@ -1,0 +1,14 @@
+{
+  "stack_id": "tin-metal|silicon|aluminium|nbtin",
+  "wallclock_s": 0.2924,
+  "source": "xpyq_api",
+  "api": {
+    "url": "https://xpyq-lib-production.up.railway.app/api/v2/run",
+    "run_id": "run-185aef55b2",
+    "execution_time_ms": 292.4,
+    "credits": 5,
+    "hardware": "auto",
+    "ui_base": "https://xpyq.vercel.app/functions",
+    "success": false
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "stack_id": "tin|silicon|alox|tin",
+  "wallclock_s": 0.2244,
+  "source": "xpyq_api",
+  "api": {
+    "url": "https://xpyq-lib-production.up.railway.app/api/v2/run",
+    "run_id": "run-aecccccc28",
+    "execution_time_ms": 224.4,
+    "credits": 4,
+    "hardware": "auto",
+    "ui_base": "https://xpyq.vercel.app/functions",
+    "success": false
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "stack_id": "aluminium|sapphire|alox|nbtin",
+  "wallclock_s": 0.2687,
+  "source": "xpyq_api",
+  "api": {
+    "url": "https://xpyq-lib-production.up.railway.app/api/v2/run",
+    "run_id": "run-c929df5033",
+    "execution_time_ms": 268.7,
+    "credits": 5,
+    "hardware": "auto",
+    "ui_base": "https://xpyq.vercel.app/functions",
+    "success": false
+  }
+}

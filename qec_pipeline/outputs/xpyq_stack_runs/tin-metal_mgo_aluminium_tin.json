@@ -1,0 +1,14 @@
+{
+  "stack_id": "tin-metal|mgo|aluminium|tin",
+  "wallclock_s": 0.2613,
+  "source": "xpyq_api",
+  "api": {
+    "url": "https://xpyq-lib-production.up.railway.app/api/v2/run",
+    "run_id": "run-9a6101c9c3",
+    "execution_time_ms": 261.3,
+    "credits": 5,
+    "hardware": "auto",
+    "ui_base": "https://xpyq.vercel.app/functions",
+    "success": false
+  }
+}

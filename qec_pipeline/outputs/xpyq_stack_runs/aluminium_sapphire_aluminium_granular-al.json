@@ -1,0 +1,14 @@
+{
+  "stack_id": "aluminium|sapphire|aluminium|granular-al",
+  "wallclock_s": 0.2759,
+  "source": "xpyq_api",
+  "api": {
+    "url": "https://xpyq-lib-production.up.railway.app/api/v2/run",
+    "run_id": "run-163035b0e3",
+    "execution_time_ms": 275.9,
+    "credits": 5,
+    "hardware": "auto",
+    "ui_base": "https://xpyq.vercel.app/functions",
+    "success": false
+  }
+}

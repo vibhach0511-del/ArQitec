@@ -1,0 +1,14 @@
+{
+  "stack_id": "tin-metal|sapphire|alox|tin",
+  "wallclock_s": 0.2844,
+  "source": "xpyq_api",
+  "api": {
+    "url": "https://xpyq-lib-production.up.railway.app/api/v2/run",
+    "run_id": "run-066576f2ef",
+    "execution_time_ms": 284.4,
+    "credits": 5,
+    "hardware": "auto",
+    "ui_base": "https://xpyq.vercel.app/functions",
+    "success": false
+  }
+}

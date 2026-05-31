@@ -1,0 +1,14 @@
+{
+  "stack_id": "tantalum|silicon|alox|tin",
+  "wallclock_s": 0.2082,
+  "source": "xpyq_api",
+  "api": {
+    "url": "https://xpyq-lib-production.up.railway.app/api/v2/run",
+    "run_id": "run-5e9b1f89fe",
+    "execution_time_ms": 208.2,
+    "credits": 4,
+    "hardware": "auto",
+    "ui_base": "https://xpyq.vercel.app/functions",
+    "success": false
+  }
+}

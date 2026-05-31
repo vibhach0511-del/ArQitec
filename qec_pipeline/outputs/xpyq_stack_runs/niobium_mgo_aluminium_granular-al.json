@@ -1,0 +1,14 @@
+{
+  "stack_id": "niobium|mgo|aluminium|granular-al",
+  "wallclock_s": 0.271,
+  "source": "xpyq_api",
+  "api": {
+    "url": "https://xpyq-lib-production.up.railway.app/api/v2/run",
+    "run_id": "run-527a58090b",
+    "execution_time_ms": 271.0,
+    "credits": 5,
+    "hardware": "auto",
+    "ui_base": "https://xpyq.vercel.app/functions",
+    "success": false
+  }
+}

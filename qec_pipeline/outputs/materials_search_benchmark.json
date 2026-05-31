@@ -1,0 +1,161 @@
+{
+  "combos": 120,
+  "grover_iters": 9,
+  "classical": {
+    "total_wall_s": 0.000979,
+    "per_eval_s": 8e-06,
+    "stack_oracle_s": 0.279759,
+    "search_s": 33.5711,
+    "cpu_cores": 8,
+    "gpu_projected_s": 0.016392,
+    "stacks_run": 120,
+    "source": "measured_cpu"
+  },
+  "xpyq": {
+    "total_wall_s": 33.5711,
+    "per_eval_s": 0.279759,
+    "grover_s": 2.517833,
+    "grover_iters": 9,
+    "stacks_run": 120,
+    "source": "xpyq_api",
+    "base_url": "https://xpyq-lib-production.up.railway.app",
+    "ui_base": "https://xpyq.vercel.app/functions"
+  },
+  "ibm": {
+    "per_oracle_s": 2.361388,
+    "grover_s": 21.252496,
+    "samples_run": 5,
+    "source": "ibm_hardware",
+    "samples": [
+      {
+        "stack_id": "tin-metal|mgo|aluminium|granular-al",
+        "backend": "ibm_marrakesh",
+        "shots": 4096,
+        "wallclock_s": 7.224,
+        "job_id": "d8e3udbalsvc738voeu0",
+        "hardware": true,
+        "oracle_qubits": 4,
+        "execution_s": 1.969295
+      },
+      {
+        "stack_id": "tantalum|sapphire|alox|nbtin",
+        "backend": "ibm_marrakesh",
+        "shots": 4096,
+        "wallclock_s": 8.787,
+        "job_id": "d8e3ug87jphs739k6jpg",
+        "hardware": true,
+        "oracle_qubits": 4,
+        "execution_s": 3.95526
+      },
+      {
+        "stack_id": "tantalum|sapphire|aluminium|tin",
+        "backend": "ibm_marrakesh",
+        "shots": 4096,
+        "wallclock_s": 6.784,
+        "job_id": "d8e3uk1vjngc73anrp90",
+        "hardware": true,
+        "oracle_qubits": 4,
+        "execution_s": 1.972994
+      },
+      {
+        "stack_id": "aluminium|mgo|alox|nbtin",
+        "backend": "ibm_marrakesh",
+        "shots": 4096,
+        "wallclock_s": 6.852,
+        "job_id": "d8e3unbo3njc73eu7a10",
+        "hardware": true,
+        "oracle_qubits": 4,
+        "execution_s": 1.966727
+      },
+      {
+        "stack_id": "tin-metal|sapphire|aluminium|nbn",
+        "backend": "ibm_marrakesh",
+        "shots": 4096,
+        "wallclock_s": 6.162,
+        "job_id": "d8e3uqbo3njc73eu7a6g",
+        "hardware": true,
+        "oracle_qubits": 4,
+        "execution_s": 1.942666
+      }
+    ]
+  },
+  "sweep": [
+    {
+      "n": 100,
+      "classical": 27.975917,
+      "gpu": 0.01366,
+      "xpyq": 2.238073,
+      "ibm": 18.891107
+    },
+    {
+      "n": 1000,
+      "classical": 279.759167,
+      "gpu": 0.136601,
+      "xpyq": 6.993979,
+      "ibm": 59.03471
+    },
+    {
+      "n": 10000,
+      "classical": 2797.591667,
+      "gpu": 1.366012,
+      "xpyq": 22.100974,
+      "ibm": 186.549684
+    },
+    {
+      "n": 100000,
+      "classical": 27975.916667,
+      "gpu": 13.660116,
+      "xpyq": 69.660033,
+      "ibm": 587.985712
+    },
+    {
+      "n": 1000000,
+      "classical": 279759.166667,
+      "gpu": 136.601156,
+      "xpyq": 219.890705,
+      "ibm": 1856.051282
+    },
+    {
+      "n": 10000000,
+      "classical": 2797591.666667,
+      "gpu": 1366.011556,
+      "xpyq": 694.92177,
+      "ibm": 5865.688786
+    },
+    {
+      "n": 100000000,
+      "classical": 27975916.666667,
+      "gpu": 13660.11556,
+      "xpyq": 2197.228495,
+      "ibm": 18546.344494
+    },
+    {
+      "n": 1000000000,
+      "classical": 279759166.666667,
+      "gpu": 136601.155599,
+      "xpyq": 6948.378423,
+      "ibm": 58649.803691
+    }
+  ],
+  "bar_comparison": [
+    {
+      "label": "Classical CPU",
+      "timeS": 33.5711,
+      "source": "measured"
+    },
+    {
+      "label": "XpyQ (Grover)",
+      "timeS": 2.517833,
+      "source": "xpyq_api"
+    },
+    {
+      "label": "IBM Quantum (Grover)",
+      "timeS": 21.252496,
+      "source": "ibm_hardware"
+    }
+  ],
+  "meta": {
+    "generatedAt": "2026-05-31T14:04:58Z",
+    "scaleReference": 1000000
+  }
+}

@@ -37,10 +37,10 @@ dist-ssr
 *.sln
 *.sw?
 
-# Virtual environment
-lib/
-bin/
-include/
+# Virtual environment (root only — do not use bare `lib/` or it ignores src/lib/)
+/lib/
+/bin/
+/include/
 pyvenv.cfg
 share/
 etc/

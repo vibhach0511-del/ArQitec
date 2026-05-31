@@ -1,0 +1,47 @@
+[
+  {
+    "stack_id": "tin-metal|mgo|aluminium|granular-al",
+    "backend": "ibm_marrakesh",
+    "shots": 4096,
+    "wallclock_s": 7.224,
+    "job_id": "d8e3udbalsvc738voeu0",
+    "hardware": true,
+    "oracle_qubits": 4
+  },
+  {
+    "stack_id": "tantalum|sapphire|alox|nbtin",
+    "backend": "ibm_marrakesh",
+    "shots": 4096,
+    "wallclock_s": 8.787,
+    "job_id": "d8e3ug87jphs739k6jpg",
+    "hardware": true,
+    "oracle_qubits": 4
+  },
+  {
+    "stack_id": "tantalum|sapphire|aluminium|tin",
+    "backend": "ibm_marrakesh",
+    "shots": 4096,
+    "wallclock_s": 6.784,
+    "job_id": "d8e3uk1vjngc73anrp90",
+    "hardware": true,
+    "oracle_qubits": 4
+  },
+  {
+    "stack_id": "aluminium|mgo|alox|nbtin",
+    "backend": "ibm_marrakesh",
+    "shots": 4096,
+    "wallclock_s": 6.852,
+    "job_id": "d8e3unbo3njc73eu7a10",
+    "hardware": true,
+    "oracle_qubits": 4
+  },
+  {
+    "stack_id": "tin-metal|sapphire|aluminium|nbn",
+    "backend": "ibm_marrakesh",
+    "shots": 4096,
+    "wallclock_s": 6.162,
+    "job_id": "d8e3uqbo3njc73eu7a6g",
+    "hardware": true,
+    "oracle_qubits": 4
+  }
+]

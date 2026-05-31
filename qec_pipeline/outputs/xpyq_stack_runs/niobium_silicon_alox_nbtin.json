@@ -1,0 +1,14 @@
+{
+  "stack_id": "niobium|silicon|alox|nbtin",
+  "wallclock_s": 0.2425,
+  "source": "xpyq_api",
+  "api": {
+    "url": "https://xpyq-lib-production.up.railway.app/api/v2/run",
+    "run_id": "run-19d50fcaff",
+    "execution_time_ms": 242.5,
+    "credits": 4,
+    "hardware": "auto",
+    "ui_base": "https://xpyq.vercel.app/functions",
+    "success": false
+  }
+}
