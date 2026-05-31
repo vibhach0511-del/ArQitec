@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { Atom, Cpu, Snowflake, Target as TargetIcon, Check, Trophy, TriangleAlert, ShieldCheck, X, CornerDownRight, Gauge, FlaskConical, Layers, Rocket } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from "recharts";
 import { Panel, SectionHeader, MetricCard } from "@/components/qa/primitives";
+import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import {
   STACK_BUCKETS, SCALE_REFERENCE, bestStack, combinationCount, searchProjection, sweepProjection,
@@ -11,11 +12,11 @@ import {
   CONTROL_OPTIONS,
   CRYO_OPTIONS,
   QUBIT_TYPE_FAMILIES,
-  TARGETS,
   materialsForNode,
   needsQEC,
   qubitNodeById,
   runWorkflow,
+  type CodesignTarget,
 } from "@/lib/qa/codesign";
 import { MATERIALS_META } from "@/lib/qa/materials-data";
 import { groundPlaneScore } from "@/lib/qa/ground-plane";
@@ -51,13 +52,27 @@ function CodesignPage() {
   const [qubitNodeId, setQubitNodeId] = useState("transmon");
   const [controlId, setControlId] = useState(CONTROL_OPTIONS[0].id);
   const [cryoId, setCryoId] = useState(CRYO_OPTIONS[0].id);
-  const [targetId, setTargetId] = useState("memory-demo");
+  const [targetErrorPct, setTargetErrorPct] = useState(0.01);
   const [maxPhysical, setMaxPhysical] = useState(200);
 
   const node = qubitNodeById(qubitNodeId);
   const control = byId(CONTROL_OPTIONS, controlId);
   const cryo = byId(CRYO_OPTIONS, cryoId);
-  const target = TARGETS.find((t) => t.id === targetId) ?? TARGETS[0];
+
+  // Step 4 is a 0-100% slider for the target logical error rate. A single
+  // logical qubit over a memory-style op count keeps the footprint in the
+  // practical 50-300 budget range; lower % demands larger codes.
+  const target = useMemo<CodesignTarget>(() => {
+    const pL = Math.max(targetErrorPct / 100, 1e-12);
+    return {
+      id: "custom",
+      name: `Target p_L ${targetErrorPct}%`,
+      logicalErrorTarget: pL,
+      logicalQubits: 1,
+      logicalOps: 1e6,
+      notes: "Custom target logical error rate set via the Step 4 slider.",
+    };
+  }, [targetErrorPct]);
 
   const wf = useMemo(() => runWorkflow(node, control, cryo, target, maxPhysical), [node, control, cryo, target, maxPhysical]);
   const { constraints, output } = wf;
@@ -124,10 +139,21 @@ function CodesignPage() {
           ))}
         </StepPanel>
         <StepPanel n={4} title="Target · logical error" icon={<TargetIcon className="h-3.5 w-3.5 text-amber" />}>
-          {TARGETS.map((t) => (
-            <Chip key={t.id} active={targetId === t.id} onClick={() => setTargetId(t.id)}
-              title={t.name} sub={`p_L ${t.logicalErrorTarget.toExponential(0)} · ${t.logicalQubits} logical${needsQEC(t) ? "" : " · no QEC"}`} />
-          ))}
+          <div className="px-1 pt-1 pb-2">
+            <div className="flex items-baseline justify-between mb-3">
+              <span className="text-2xl font-semibold text-amber tabular-nums">{targetErrorPct}<span className="text-sm text-muted-foreground ml-0.5">%</span></span>
+              <span className="mono text-[10px] text-muted-foreground">p_L = {(targetErrorPct / 100).toExponential(1)}</span>
+            </div>
+            <Slider value={[targetErrorPct]} min={0} max={100} step={0.01} onValueChange={(v) => setTargetErrorPct(v[0])} aria-label="Target logical error rate" />
+            <div className="flex justify-between mono text-[9px] text-muted-foreground mt-1.5">
+              <span>0%</span><span>50%</span><span>100%</span>
+            </div>
+            <div className="mono text-[10px] mt-2">
+              {needsQEC(target)
+                ? <span className="text-cyan">QEC required · fault-tolerant regime</span>
+                : <span className="text-muted-foreground">no QEC needed · NISQ regime (p_L ≥ 0.1%)</span>}
+            </div>
+          </div>
         </StepPanel>
         <StepPanel n={5} title="Target · max physical qubits" icon={<Gauge className="h-3.5 w-3.5 text-cyan" />}>
           <div className="grid grid-cols-3 gap-1.5">
