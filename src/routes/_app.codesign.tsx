@@ -25,8 +25,8 @@ const FAMILY_ACCENT: Record<string, string> = { violet: "text-violet", green: "t
 const byId = (list: ControlHardware[], id: string) => list.find((h) => h.id === id) ?? list[0];
 
 const BUDGETS = [
-  { label: "1K", value: 1e3 }, { label: "100K", value: 1e5 }, { label: "1M", value: 1e6 },
-  { label: "10M", value: 1e7 }, { label: "100M", value: 1e8 }, { label: "∞", value: Infinity },
+  { label: "50", value: 50 }, { label: "100", value: 100 }, { label: "150", value: 150 },
+  { label: "200", value: 200 }, { label: "250", value: 250 }, { label: "300", value: 300 },
 ];
 
 const fmtN = (n: number | null | undefined) => (n === null || n === undefined ? "—" : Number.isFinite(n) ? Math.round(n).toLocaleString() : "∞");
@@ -48,7 +48,7 @@ function CodesignPage() {
   const [controlId, setControlId] = useState(CONTROL_OPTIONS[0].id);
   const [cryoId, setCryoId] = useState(CRYO_OPTIONS.find((c) => c.category === "dilution-refrigerator")?.id ?? CRYO_OPTIONS[0].id);
   const [targetId, setTargetId] = useState("memory-demo");
-  const [maxPhysical, setMaxPhysical] = useState(1e6);
+  const [maxPhysical, setMaxPhysical] = useState(200);
 
   const node = qubitNodeById(qubitNodeId);
   const control = byId(CONTROL_OPTIONS, controlId);
