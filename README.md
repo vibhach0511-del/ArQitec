@@ -97,7 +97,7 @@ Each match includes:
 
 ```bash
 # Clone the repo
-git clone https://github.com/techstar9797/quantum.git
+git clone https://github.com/techstar9797/ArQiteQ.git
 cd quantum
 
 # Install dependencies
