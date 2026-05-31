@@ -203,14 +203,6 @@ No perfect match. Best tradeoff: Surface Code (distance-17)
 
 ---
 
-## Team
-
-Built at [Hackathon Name] — May 2026
-
-- [Your Name] — Physics / QEC
-- [Teammate] — Materials / Simulation
-- [Teammate] — Software / ML
-
 ---
 
 ## License
