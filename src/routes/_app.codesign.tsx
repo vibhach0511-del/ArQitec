@@ -14,6 +14,7 @@ import {
   QUBIT_TYPE_FAMILIES,
   materialsForNode,
   needsQEC,
+  isConductiveFilm,
   qubitNodeById,
   runWorkflow,
   type CodesignTarget,
@@ -204,7 +205,7 @@ function CodesignPage() {
               <MetricCard label="Physical qubits" value={fmtN(output.best.totalPhysical)} tone={output.best.withinBudget ? "good" : "warn"} hint={`${fmtN(output.best.perLogical)}/logical`} />
               <MetricCard label="Wall-clock" value={fmtTime(output.best.wallClockS)} tone="neutral" />
               <MetricCard label="Effective p₂q" value={`${(output.best.effectiveP2q * 100).toFixed(2)}`} unit="%" tone="warn" />
-              <MetricCard label="MP relevance" value={output.best.relevance} unit="/100" tone={output.best.relevance > 70 ? "good" : "warn"} />
+              <MetricCard label="Fit score" value={output.best.fitScore} unit="/100" tone={output.best.fitScore > 70 ? "good" : "warn"} />
               <MetricCard label="η (bias)" value={output.best.material.biasEta} tone="neutral" />
               <MetricCard label="Within budget" value={output.best.withinBudget ? "yes" : "no"} tone={output.best.withinBudget ? "good" : "warn"} />
             </div>
@@ -283,7 +284,12 @@ function CodesignPage() {
                 {rankedByMaterial.slice(0, 16).map((p, i) => (
                   <tr key={`${p.material.id}-${p.code.id}`} className={cn("border-b border-border/40 last:border-0 hover:bg-surface-2/40", !p.feasible && "opacity-55")}>
                     <td className="px-4 py-2.5 mono text-muted-foreground">{i + 1}</td>
-                    <td className="px-4 py-2.5 text-foreground">{p.material.name}</td>
+                    <td className="px-4 py-2.5 text-foreground">
+                      {p.material.name}
+                      {isConductiveFilm(p.material)
+                        ? <span className="ml-1.5 mono text-[9px] uppercase tracking-wide text-cyan">film</span>
+                        : <span className="ml-1.5 mono text-[9px] uppercase tracking-wide text-muted-foreground/60">support</span>}
+                    </td>
                     <td className="px-4 py-2.5"><GroundPlaneCell materialId={p.material.id} /></td>
                     <td className="px-4 py-2.5 text-[11px] text-muted-foreground">
                       {p.material.role}

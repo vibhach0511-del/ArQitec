@@ -342,6 +342,8 @@ export interface HardwareConstraints {
   /** Effective QEC syndrome-cycle time (ns). */
   cycleTimeNs: number;
   realTimeDecoding: boolean;
+  /** Multiplexed qubit capacity of the selected cryostat. */
+  fridgeMaxQubits: number;
 }
 
 export function deriveConstraints(control: ControlHardware, cryo: Cryostat): HardwareConstraints {
@@ -355,6 +357,7 @@ export function deriveConstraints(control: ControlHardware, cryo: Cryostat): Har
   return {
     gateTimeFloorNs, measurementLatencyNs, thermalFloorK, thermalPenalty,
     cycleTimeNs, realTimeDecoding: control.realTimeDecoding,
+    fridgeMaxQubits: cryo.maxQubits,
   };
 }
 
@@ -382,6 +385,10 @@ export function effectiveP2q(m: { pGate2q: number }, c: HardwareConstraints): nu
 /** Materials usable to build the selected qubit type. */
 export const materialsForNode = (node: QubitTypeNode): QubitMaterial[] =>
   MATERIALS.filter((m) => m.families.includes(node.id));
+
+/** Superconducting films / interconnects that form the qubit metal stack. */
+export const isConductiveFilm = (m: QubitMaterial): boolean =>
+  /electrode|superinductor|interconnect/.test(m.role);
 
 /** Map a qubit-type node to the control "platform" name for compatibility. */
 export function platformForNode(node: QubitTypeNode): string {
@@ -434,22 +441,18 @@ function pairResult(
 ): PairResult {
   const p = effectiveP2q(material, c);
   const mpRel = mpRelevance(material);
-  // Relevance leans on MP properties (60%) + a SOFT QEC-fit term (40%), so the
-  // ranking is property-driven and nothing is hard-excluded.
   const rel = (feasibleTier: number) => Math.round((0.6 * mpRel + 0.4 * feasibleTier) * 10) / 10;
   const base = { material, code, effectiveP2q: p };
 
-  // Control-hardware terms shared by every branch: faster cycle time and a
-  // real-time decoder (when the target needs QEC) raise the fit.
   const speed = clamp01(1 - (c.cycleTimeNs - 200) / 2000);
   const decodeMul = needsQEC(target) && !c.realTimeDecoding ? 0.6 : 1;
 
   if (p >= code.threshold) {
-    return { ...base, relevance: rel(30), fitScore: Math.round(0.25 * mpRel), feasible: false, distance: null, perLogical: null, totalPhysical: null, wallClockS: null, withinBudget: false, reason: `p₂q ${(p * 100).toFixed(2)}% ≥ ${code.name} threshold ${(code.threshold * 100).toFixed(1)}%` };
+    return { ...base, relevance: rel(30), fitScore: 0, feasible: false, distance: null, perLogical: null, totalPhysical: null, wallClockS: null, withinBudget: false, reason: `p₂q ${(p * 100).toFixed(2)}% ≥ ${code.name} threshold ${(code.threshold * 100).toFixed(1)}%` };
   }
   let d = requiredDistance(p, target.logicalErrorTarget);
   if (d === null) {
-    return { ...base, relevance: rel(30), fitScore: Math.round(0.25 * mpRel), feasible: false, distance: null, perLogical: null, totalPhysical: null, wallClockS: null, withinBudget: false, reason: "above threshold for this code" };
+    return { ...base, relevance: rel(30), fitScore: 0, feasible: false, distance: null, perLogical: null, totalPhysical: null, wallClockS: null, withinBudget: false, reason: "above threshold for this code" };
   }
   if (code.biasTailored) {
     const eta = Math.max(1, material.biasEta);
@@ -458,16 +461,20 @@ function pairResult(
   const di = nextOddAtLeast3(d);
   const perLogical = code.perLogical(di);
   const totalPhysical = perLogical * target.logicalQubits;
-  // Wall-clock ≈ cycle time × (d rounds per logical op) × logical ops.
   const wallClockS = c.cycleTimeNs * 1e-9 * di * target.logicalOps;
   const withinBudget = totalPhysical <= maxPhysical;
 
-  // Continuous, constraint-aware fit (0-100). Re-orders when ANY input card
-  // changes: margin tracks cryo thermal penalty + material p₂q vs the code
-  // threshold; budgetFit tracks the target footprint vs the qubit budget.
-  const margin = clamp01(1 - p / code.threshold);
-  const budgetFit = withinBudget ? clamp01(1 - totalPhysical / maxPhysical) : clamp01(maxPhysical / totalPhysical) * 0.5;
-  const fitScore = Math.round(clamp01(0.4 * (mpRel / 100) + 0.3 * margin + 0.18 * budgetFit + 0.12 * speed) * decodeMul * 100);
+  // Input-dominated fit (0-100): target error rate, budget, hardware; MP is a tiebreaker.
+  const targetFit = clamp01(1 - (di - 3) / 40);
+  const budgetScore = withinBudget
+    ? clamp01(1 - totalPhysical / maxPhysical)
+    : clamp01(maxPhysical / totalPhysical) * 0.35;
+  const fridgeHeadroom = clamp01(1 - totalPhysical / c.fridgeMaxQubits);
+  const hwScore = clamp01(0.5 * speed + 0.3 * fridgeHeadroom + 0.2 * (needsQEC(target) && c.realTimeDecoding ? 1 : 0.7));
+  const mpTie = mpRel / 100;
+  const fitScore = Math.round(
+    clamp01(0.45 * targetFit + 0.30 * budgetScore + 0.15 * hwScore + 0.10 * mpTie) * decodeMul * 100,
+  );
 
   return {
     ...base, relevance: rel(withinBudget ? 100 : 65), fitScore, feasible: true, distance: d,
@@ -568,9 +575,11 @@ export function runWorkflow(
     for (const code of CODES) pairs.push(pairResult(material, code, target, constraints, maxPhysical));
   }
   pairs.sort((a, b) => {
-    if (b.fitScore !== a.fitScore) return b.fitScore - a.fitScore; // constraint-aware fit first
-    const rank = (r: PairResult) => (r.feasible && r.withinBudget ? 0 : r.feasible ? 1 : 2);
-    if (rank(a) !== rank(b)) return rank(a) - rank(b);
+    const film = (r: PairResult) => isConductiveFilm(r.material) ? 0 : 1;
+    if (film(a) !== film(b)) return film(a) - film(b);
+    const tier = (r: PairResult) => (r.feasible && r.withinBudget ? 0 : r.feasible ? 1 : 2);
+    if (tier(a) !== tier(b)) return tier(a) - tier(b);
+    if (b.fitScore !== a.fitScore) return b.fitScore - a.fitScore;
     return (a.totalPhysical ?? Infinity) - (b.totalPhysical ?? Infinity);
   });
 
@@ -583,9 +592,11 @@ export function runWorkflow(
   caveats.push("Quantum material properties (T1/T2, bias \u03b7, gate fidelity) come from material_properties.py; cryostat specs from cryostat_catalog.py; Materials Project supplies the crystallography. Logical-error numbers are analytic surface-code estimates (PanQEC + Stim is the backend upgrade).");
 
   const compatIssue = !controlOk || !cryoOk || !decodeOk;
-  const feasibleWithin = pairs.find((p) => p.feasible && p.withinBudget) ?? null;
-  const feasibleAny = pairs.find((p) => p.feasible) ?? null;
-  const topByRelevance = pairs[0] ?? null;
+  const feasibleWithinFilm = pairs.find((p) => p.feasible && p.withinBudget && isConductiveFilm(p.material)) ?? null;
+  const feasibleWithin = feasibleWithinFilm ?? pairs.find((p) => p.feasible && p.withinBudget) ?? null;
+  const feasibleAnyFilm = pairs.find((p) => p.feasible && isConductiveFilm(p.material)) ?? null;
+  const feasibleAny = feasibleAnyFilm ?? pairs.find((p) => p.feasible) ?? null;
+  const topByRelevance = pairs.find((p) => isConductiveFilm(p.material)) ?? pairs[0] ?? null;
 
   let mode: OutputMode;
   let best: PairResult | null;
@@ -599,7 +610,7 @@ export function runWorkflow(
     headline = `No material is catalogued for ${node.label} — here is the spec to develop one.`;
   } else if (feasibleWithin) {
     mode = "existing"; best = feasibleWithin;
-    headline = `${feasibleWithin.material.name} + ${feasibleWithin.code.name} fits ${target.name} within ${maxPhysical.toLocaleString()} qubits (relevancy ${feasibleWithin.relevance}/100).`;
+    headline = `${feasibleWithin.material.name} + ${feasibleWithin.code.name} fits ${target.name} within ${maxPhysical.toLocaleString()} qubits (fit ${feasibleWithin.fitScore}/100).`;
   } else if (feasibleAny) {
     mode = "existing-over-budget"; best = feasibleAny; newSpec = newMaterialSpec(target, maxPhysical);
     extra = [`Most relevant feasible material needs ${feasibleAny.totalPhysical?.toLocaleString()} qubits — over the ${maxPhysical.toLocaleString()} budget.`];
