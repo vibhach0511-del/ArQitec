@@ -393,6 +393,7 @@ export const hardwareSupportsPlatform = (hw: ControlHardware, platform: string):
   hw.supportsPlatforms.includes(platform);
 
 const clamp100 = (v: number) => Math.max(0, Math.min(100, v));
+const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 
 // MP-property-driven material relevance (0-100). Hackathon-friendly: lean on
 // whatever Materials Project gives us (metal/insulator role fit, stability,
@@ -416,6 +417,7 @@ export interface PairResult {
   material: QubitMaterial;
   code: QECCode;
   relevance: number;
+  fitScore: number;
   feasible: boolean;
   distance: number | null;
   perLogical: number | null;
@@ -437,12 +439,17 @@ function pairResult(
   const rel = (feasibleTier: number) => Math.round((0.6 * mpRel + 0.4 * feasibleTier) * 10) / 10;
   const base = { material, code, effectiveP2q: p };
 
+  // Control-hardware terms shared by every branch: faster cycle time and a
+  // real-time decoder (when the target needs QEC) raise the fit.
+  const speed = clamp01(1 - (c.cycleTimeNs - 200) / 2000);
+  const decodeMul = needsQEC(target) && !c.realTimeDecoding ? 0.6 : 1;
+
   if (p >= code.threshold) {
-    return { ...base, relevance: rel(30), feasible: false, distance: null, perLogical: null, totalPhysical: null, wallClockS: null, withinBudget: false, reason: `p₂q ${(p * 100).toFixed(2)}% ≥ ${code.name} threshold ${(code.threshold * 100).toFixed(1)}%` };
+    return { ...base, relevance: rel(30), fitScore: Math.round(0.25 * mpRel), feasible: false, distance: null, perLogical: null, totalPhysical: null, wallClockS: null, withinBudget: false, reason: `p₂q ${(p * 100).toFixed(2)}% ≥ ${code.name} threshold ${(code.threshold * 100).toFixed(1)}%` };
   }
   let d = requiredDistance(p, target.logicalErrorTarget);
   if (d === null) {
-    return { ...base, relevance: rel(30), feasible: false, distance: null, perLogical: null, totalPhysical: null, wallClockS: null, withinBudget: false, reason: "above threshold for this code" };
+    return { ...base, relevance: rel(30), fitScore: Math.round(0.25 * mpRel), feasible: false, distance: null, perLogical: null, totalPhysical: null, wallClockS: null, withinBudget: false, reason: "above threshold for this code" };
   }
   if (code.biasTailored) {
     const eta = Math.max(1, material.biasEta);
@@ -454,8 +461,16 @@ function pairResult(
   // Wall-clock ≈ cycle time × (d rounds per logical op) × logical ops.
   const wallClockS = c.cycleTimeNs * 1e-9 * di * target.logicalOps;
   const withinBudget = totalPhysical <= maxPhysical;
+
+  // Continuous, constraint-aware fit (0-100). Re-orders when ANY input card
+  // changes: margin tracks cryo thermal penalty + material p₂q vs the code
+  // threshold; budgetFit tracks the target footprint vs the qubit budget.
+  const margin = clamp01(1 - p / code.threshold);
+  const budgetFit = withinBudget ? clamp01(1 - totalPhysical / maxPhysical) : clamp01(maxPhysical / totalPhysical) * 0.5;
+  const fitScore = Math.round(clamp01(0.4 * (mpRel / 100) + 0.3 * margin + 0.18 * budgetFit + 0.12 * speed) * decodeMul * 100);
+
   return {
-    ...base, relevance: rel(withinBudget ? 100 : 65), feasible: true, distance: d,
+    ...base, relevance: rel(withinBudget ? 100 : 65), fitScore, feasible: true, distance: d,
     perLogical, totalPhysical, wallClockS, withinBudget, reason: "",
   };
 }
@@ -553,7 +568,7 @@ export function runWorkflow(
     for (const code of CODES) pairs.push(pairResult(material, code, target, constraints, maxPhysical));
   }
   pairs.sort((a, b) => {
-    if (b.relevance !== a.relevance) return b.relevance - a.relevance; // MP-driven first
+    if (b.fitScore !== a.fitScore) return b.fitScore - a.fitScore; // constraint-aware fit first
     const rank = (r: PairResult) => (r.feasible && r.withinBudget ? 0 : r.feasible ? 1 : 2);
     if (rank(a) !== rank(b)) return rank(a) - rank(b);
     return (a.totalPhysical ?? Infinity) - (b.totalPhysical ?? Infinity);

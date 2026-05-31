@@ -62,6 +62,13 @@ function CodesignPage() {
   const wf = useMemo(() => runWorkflow(node, control, cryo, target, maxPhysical), [node, control, cryo, target, maxPhysical]);
   const { constraints, output } = wf;
 
+  // One row per material: pairs are already sorted (relevance → feasibility →
+  // footprint), so the first occurrence of each material is its best code.
+  const rankedByMaterial = useMemo(() => {
+    const seen = new Set<string>();
+    return wf.pairs.filter((p) => (seen.has(p.material.id) ? false : seen.add(p.material.id)));
+  }, [wf.pairs]);
+
   // Combinatorial materials search (XpyQ) projection.
   const combos = combinationCount();
   const proj = useMemo(() => searchProjection(combos), [combos]);
@@ -145,72 +152,8 @@ function CodesignPage() {
         <MetricCard label="QEC cycle time" value={constraints.cycleTimeNs} unit="ns" tone="neutral" hint={constraints.realTimeDecoding ? "RT-decode ✓" : "no RT-decode"} />
       </div>
 
-      {/* ====================== QEC MATCHING ENGINE ====================== */}
-      <LayerLabel n="3" title="Material library + QEC matching engine — (material × code)" />
-      <Panel className="mb-4" title="Possible materials × codes" subtitle="Real materials ranked by relevancy (within budget, then footprint)"
-        action={<span className="mono text-[10px] text-muted-foreground inline-flex items-center gap-1"><FlaskConical className="h-3 w-3 text-cyan" /> {wf.materials.length} materials × 5 codes · {MATERIALS_META.source}</span>}>
-        {wf.pairs.length === 0 ? (
-          <div className="p-6 text-sm text-muted-foreground text-center">No catalogue material for {node.label} — see the new-material spec below.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mono">
-                <tr className="border-b border-border/60">
-                  <th className="text-left px-4 py-2.5">#</th>
-                  <th className="text-left px-4 py-2.5">Material</th>
-                  <th className="text-left px-4 py-2.5">GP / Resonator</th>
-                  <th className="text-left px-4 py-2.5">Role · MP</th>
-                  <th className="text-left px-4 py-2.5">Code</th>
-                  <th className="text-right px-4 py-2.5">d</th>
-                  <th className="text-right px-4 py-2.5">Total physical</th>
-                  <th className="text-right px-4 py-2.5">Wall-clock</th>
-                  <th className="text-left px-4 py-2.5">Relevance</th>
-                  <th className="text-left px-4 py-2.5">Status</th>
-                </tr>
-              </thead>
-              <tbody className="tabular-nums">
-                {wf.pairs.slice(0, 16).map((p, i) => (
-                  <tr key={`${p.material.id}-${p.code.id}`} className={cn("border-b border-border/40 last:border-0 hover:bg-surface-2/40", !p.feasible && "opacity-55")}>
-                    <td className="px-4 py-2.5 mono text-muted-foreground">{i + 1}</td>
-                    <td className="px-4 py-2.5 text-foreground">{p.material.name}</td>
-                    <td className="px-4 py-2.5"><GroundPlaneCell materialId={p.material.id} /></td>
-                    <td className="px-4 py-2.5 text-[11px] text-muted-foreground">
-                      {p.material.role}
-                      {p.material.mpId && <span className="mono text-cyan"> · {p.material.mpId}</span>}
-                      {p.material.crystalSystem && <span> · {p.material.crystalSystem}</span>}
-                      {p.material.isStable && <span className="text-neon-green"> · stable</span>}
-                      {p.material.ordering && p.material.ordering !== "NM" && <span className="text-danger"> · {p.material.ordering} magnetic</span>}
-                      {p.material.qpropsConfidence && <span className="text-violet"> · T1/T2 {p.material.qpropsConfidence}</span>}
-                    </td>
-                    <td className="px-4 py-2.5 text-violet mono text-xs">{p.code.name}</td>
-                    <td className="px-4 py-2.5 text-right mono">{p.distance !== null ? p.distance.toFixed(1) : "—"}</td>
-                    <td className="px-4 py-2.5 text-right mono text-cyan">{fmtN(p.totalPhysical)}</td>
-                    <td className="px-4 py-2.5 text-right mono text-muted-foreground">{fmtTime(p.wallClockS)}</td>
-                    <td className="px-4 py-2.5">
-                      <div className="flex items-center gap-1.5">
-                        <div className="h-1 w-12 rounded-full bg-surface-3/80 overflow-hidden"><div className="h-full rounded-full bg-cyan" style={{ width: `${p.relevance}%` }} /></div>
-                        <span className="mono text-[10px] tabular-nums text-cyan">{p.relevance}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-2.5">
-                      {p.feasible && p.withinBudget ? (
-                        <span className="inline-flex items-center gap-1 mono text-[10px] text-neon-green"><Check className="h-3 w-3" /> in budget</span>
-                      ) : p.feasible ? (
-                        <span className="inline-flex items-center gap-1 mono text-[10px] text-amber"><TriangleAlert className="h-3 w-3" /> over budget</span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 mono text-[10px] text-danger" title={p.reason}><X className="h-3 w-3" /> {p.reason}</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Panel>
-
       {/* ====================== OUTPUT LAYER ====================== */}
-      <LayerLabel n="4" title="Output" />
+      <LayerLabel n="3" title="Output" />
       <div className={cn("rounded-lg border px-5 py-4 mb-3 flex items-start gap-3",
         output.mode === "existing" ? "border-neon-green/30 bg-neon-green/5" : output.mode === "new-material" ? "border-cyan/30 bg-cyan/5" : "border-amber/30 bg-amber/5")}>
         <div className={cn("mt-0.5 flex h-8 w-8 items-center justify-center rounded-md border shrink-0",
@@ -285,6 +228,70 @@ function CodesignPage() {
             </li>
           ))}
         </ul>
+      </Panel>
+
+      {/* ====================== MATERIAL LIBRARY + QEC MATCHING ENGINE ====================== */}
+      <LayerLabel n="4" title="Material library + QEC matching engine — (material × code)" />
+      <Panel className="mb-4" title="Possible materials × codes" subtitle="Real materials ranked by relevancy (within budget, then footprint)"
+        action={<span className="mono text-[10px] text-muted-foreground inline-flex items-center gap-1"><FlaskConical className="h-3 w-3 text-cyan" /> {rankedByMaterial.length} materials · best code each · {MATERIALS_META.source}</span>}>
+        {wf.pairs.length === 0 ? (
+          <div className="p-6 text-sm text-muted-foreground text-center">No catalogue material for {node.label} — see the new-material spec above.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mono">
+                <tr className="border-b border-border/60">
+                  <th className="text-left px-4 py-2.5">#</th>
+                  <th className="text-left px-4 py-2.5">Material</th>
+                  <th className="text-left px-4 py-2.5">GP / Resonator</th>
+                  <th className="text-left px-4 py-2.5">Role · MP</th>
+                  <th className="text-left px-4 py-2.5">Code</th>
+                  <th className="text-right px-4 py-2.5">d</th>
+                  <th className="text-right px-4 py-2.5">Total physical</th>
+                  <th className="text-right px-4 py-2.5">Wall-clock</th>
+                  <th className="text-left px-4 py-2.5">Fit</th>
+                  <th className="text-left px-4 py-2.5">Status</th>
+                </tr>
+              </thead>
+              <tbody className="tabular-nums">
+                {rankedByMaterial.slice(0, 16).map((p, i) => (
+                  <tr key={`${p.material.id}-${p.code.id}`} className={cn("border-b border-border/40 last:border-0 hover:bg-surface-2/40", !p.feasible && "opacity-55")}>
+                    <td className="px-4 py-2.5 mono text-muted-foreground">{i + 1}</td>
+                    <td className="px-4 py-2.5 text-foreground">{p.material.name}</td>
+                    <td className="px-4 py-2.5"><GroundPlaneCell materialId={p.material.id} /></td>
+                    <td className="px-4 py-2.5 text-[11px] text-muted-foreground">
+                      {p.material.role}
+                      {p.material.mpId && <span className="mono text-cyan"> · {p.material.mpId}</span>}
+                      {p.material.crystalSystem && <span> · {p.material.crystalSystem}</span>}
+                      {p.material.isStable && <span className="text-neon-green"> · stable</span>}
+                      {p.material.ordering && p.material.ordering !== "NM" && <span className="text-danger"> · {p.material.ordering} magnetic</span>}
+                      {p.material.qpropsConfidence && <span className="text-violet"> · T1/T2 {p.material.qpropsConfidence}</span>}
+                    </td>
+                    <td className="px-4 py-2.5 text-violet mono text-xs">{p.code.name}</td>
+                    <td className="px-4 py-2.5 text-right mono">{p.distance !== null ? p.distance.toFixed(1) : "—"}</td>
+                    <td className="px-4 py-2.5 text-right mono text-cyan">{fmtN(p.totalPhysical)}</td>
+                    <td className="px-4 py-2.5 text-right mono text-muted-foreground">{fmtTime(p.wallClockS)}</td>
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <div className="h-1 w-12 rounded-full bg-surface-3/80 overflow-hidden"><div className="h-full rounded-full bg-cyan" style={{ width: `${p.fitScore}%` }} /></div>
+                        <span className="mono text-[10px] tabular-nums text-cyan">{p.fitScore}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      {p.feasible && p.withinBudget ? (
+                        <span className="inline-flex items-center gap-1 mono text-[10px] text-neon-green"><Check className="h-3 w-3" /> in budget</span>
+                      ) : p.feasible ? (
+                        <span className="inline-flex items-center gap-1 mono text-[10px] text-amber"><TriangleAlert className="h-3 w-3" /> over budget</span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 mono text-[10px] text-danger" title={p.reason}><X className="h-3 w-3" /> {p.reason}</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Panel>
 
       {/* ============ COMBINATORIAL MATERIALS SEARCH (XpyQ) ============ */}
