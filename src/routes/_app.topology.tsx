@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
 
 export const Route = createFileRoute("/_app/topology")({
-  head: () => ({ meta: [{ title: "Topology Explorer — Q-Architect" }, { name: "description", content: "Compare square grid, heavy-hex, modular cluster, and AI-optimized topologies." }] }),
+  head: () => ({ meta: [{ title: "Topology Explorer — ArQiteQ" }, { name: "description", content: "Compare square grid, heavy-hex, modular cluster, and AI-optimized topologies." }] }),
   component: TopologyPage,
 });
 

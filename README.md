@@ -1,14 +1,6 @@
 # ArQiteQ
 
-> **Architecting the Quantum Stack: Intelligent Matching of Error-Correcting Codes to Quantum Materials**
-
----
-
-## What is ArQiteQ?
-
-ArQiteQ is an AI agent that bridges the gap between **quantum materials science** and **quantum error correction (QEC) theory**. Given a physicist's hardware constraints—qubit type, control electronics, cryogenics, and target performance— ArQiteQ recommends the optimal error-correcting code and simulates its performance on that specific material stack.
-
-The core insight: **materials and codes have a many-to-many relationship**, and the best match depends on tradeoffs between error suppression, hardware overhead, and computational cost.
+ArQiteQ is a QEC recommendation engine for superconducting quantum chips, built at Hackathon 2026. Given a material's noise profile — bias ratio and two-qubit gate error rate — it recommends the optimal quantum error-correction code (Surface, XZZX etc..) and ranks Layer 2 material stacks across thousands of combinations. The engine covers the full pipeline from qubit and control hardware selection through to fabrication targets, replacing years of trial-and-error with a single lookup.
 
 ---
 
@@ -38,7 +30,7 @@ User (Physicist)
 
 ### Processing: The Materials Stack
 
-Q-ArQite models the qubit as a **6-layer material stack**:
+ArQiteQ models the qubit as a **6-layer material stack**:
 
 | Layer | Component | Key Properties |
 |-------|-----------|----------------|
@@ -96,25 +88,8 @@ Each match includes:
 | IBM Integration | [Qiskit QEC](https://github.com/qiskit-community/qiskit-qec) — Heavy-hex, hardware compilation |
 | Decoder | [PyMatching](https://github.com/oscarhiggott/PyMatching) — MWPM decoder |
 | Error Rate Estimation | [ScaLER](https://github.com/quantum-x-labs/scaler) — Scalable logical error rates |
-| Frontend | Streamlit / React (TBD) |
+| Frontend | React / TanStack Start |
 | Backend | Python, NumPy, NetworkX |
-
----
-
-## Current Scope (Hackathon MVP)
-
-- **2D QEC codes only** — Applicable to both superconducting and topological qubits
-- **Superconducting materials focus** — Al/Si, Ta/Si, Nb/Sapphire
-- **Surface code family** — Distance 3, 5, 7 with lattice surgery
-- **Steane [[7,1,3]]** — For comparison and trapped-ion crossover
-- **Heavy-hex code** — IBM-native architecture
-
-### Out of Scope (Future Work)
-
-- 3D codes (reserved for topological qubits)
-- Full bidirectional design (material → QEC and QEC → material)
-- Real-time neural decoders (AlphaQubit-style)
-- Lab automation integration (pharma pipeline)
 
 ---
 
@@ -127,96 +102,20 @@ cd quantum
 
 # Install dependencies
 pip install -r requirements.txt
+bun install
 
-# Run the agent
-python q_arqite.py   --qubit-type transmon   --material ta-si   --target-error 1e-15   --logical-qubits 100
+# Run the web app
+bun run dev
 
-# Or launch the web demo
-streamlit run app.py
+# Run the QEC pipeline
+python -m qec_pipeline.run_pipeline
 ```
-
----
-
-## Example Output
-
-```
-Input: Tantalum on Silicon (Ta/Si), T₁ = 150 µs, T₂ = 100 µs
-       Target: 100 logical qubits @ error rate < 10⁻¹⁵
-
-Match 1: Surface Code (distance-17)
-  - Logical error rate: 8.2 × 10⁻¹⁶  ✓ MEETS TARGET
-  - Physical qubits: 11,560
-  - Classical decoder cost: ~2.4 TFLOP / round
-  - QPU runtime: ~18 ms / round
-  - Crossover: Classical viable up to ~10⁶ rounds
-
-Match 2: Heavy-Hex Code (distance-11)
-  - Logical error rate: 3.1 × 10⁻¹⁴  ✗ BELOW TARGET
-  - Physical qubits: 7,920
-  - Better connectivity match for IBM-style hardware
-
-Match 3: Steane [[7,1,3]] (concatenated ×3)
-  - Logical error rate: 2.8 × 10⁻¹²  ✗ BELOW TARGET
-  - Physical qubits: 343
-  - Lowest overhead, best for near-term NISQ crossover
-
-No perfect match. Best tradeoff: Surface Code (distance-17)
-  → Increase T₁ to 200 µs to reduce distance to 13 (-40% qubits)
-  → Or accept error rate 8.2 × 10⁻¹⁶ (already meets target)
-```
-
----
-
-## Why This Matters
-
-| Stakeholder | Pain Point | Q-ArQite Solves |
-|-------------|-----------|-----------------|
-| **Materials Physicist** | "I made a better T₁ qubit—now what?" | Shows which QEC code unlocks that improvement |
-| **QEC Theorist** | "My code assumes perfect connectivity" | Validates code on real material constraints |
-| **Hardware Engineer** | "Should I use Al or Ta for my next fab run?" | Quantifies the QEC impact of material choices |
-| **Investor/PM** | "Which platform will scale first?" | Compares crossover points across material-code pairs |
-
----
-
-## Next Steps
-
-### Immediate (Post-Hackathon)
-
-1. **Validate on real data** — Run against Google Quantum AI public surface code datasets
-2. **Expand material library** — Add Nb/Sapphire, Al/Sapphire, InAs-Al (topological)
-3. **Add color codes** — Implement via MQT QECC for trapped-ion crossover analysis
-4. **Improve decoder cost model** — Integrate union-find and neural decoder benchmarks
-
-### Short-Term (1–3 Months)
-
-5. **Bidirectional mode** — Given a target QEC code, recommend material stack modifications
-6. **3D code support** — Extend to topological qubits (Majorana, Floquet)
-7. **Hardware API integration** — Compile matched codes directly to Qiskit Runtime or Google Quantum AI
-8. **Error budget tool** — Decompose logical error into per-layer contributions
-
-### Long-Term (3–12 Months)
-
-9. **Lab automation bridge** — Export material recommendations to fabrication control systems
-10. **Pharma pipeline** — Adapt framework for quantum simulation target matching (drug discovery)
-11. **Community dataset** — Crowdsource material-QEC performance data from labs worldwide
-12. **Publication** — "Q-ArQite: A Materials-Aware Framework for Quantum Error Correction Design"
-
----
 
 ---
 
 ## License
 
 MIT — Open for research and commercial use.
-
----
-
-## Acknowledgments
-
-- Google Quantum AI for Stim and public surface code data
-- TQEC community for lattice surgery tools
-- IBM Quantum for Qiskit QEC and heavy-hex architecture
-- MQT team for QECC framework and color code support
 
 ---
 

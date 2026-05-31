@@ -1,4 +1,4 @@
-// Q-Architect — surface-code characteristics model.
+// ArQiteQ — surface-code characteristics model.
 // Deterministic, self-contained models for the surface-code dashboard:
 // the d <-> overhead trade-off, the ~1% threshold, decoder latency, magic-state
 // distillation overhead, and the Google Willow 2024 milestone data.

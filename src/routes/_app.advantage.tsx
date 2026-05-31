@@ -12,7 +12,7 @@ import {
 } from "@/lib/qa/advantage-data";
 
 export const Route = createFileRoute("/_app/advantage")({
-  head: () => ({ meta: [{ title: "Quantum vs Classical — Q-Architect" }, { name: "description", content: "Quantum error correction: classically simulating a noisy surface-code memory vs running it on a QPU." }] }),
+  head: () => ({ meta: [{ title: "Quantum vs Classical — ArQiteQ" }, { name: "description", content: "Quantum error correction: classically simulating a noisy surface-code memory vs running it on a QPU." }] }),
   component: AdvantagePage,
 });
 

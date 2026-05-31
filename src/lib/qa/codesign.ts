@@ -1,4 +1,4 @@
-// Q-Architect — Co-Design Selector engine.
+// ArQiteQ — Co-Design Selector engine.
 // Ports the `vibha` Python catalogues + recommender to TypeScript:
 //   - SC_DEVICES         <- superconducting_qubit.py (DEVICES)
 //   - CONTROL_HARDWARE   <- control_hardware_catalogue.py (HARDWARE)

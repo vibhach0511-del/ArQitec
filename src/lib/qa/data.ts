@@ -1,4 +1,4 @@
-// Q-Architect — typed mock datasets.
+// ArQiteQ — typed mock datasets.
 // Source of truth for materials, topologies, workloads, and QEC codes.
 // Values are illustrative, calibrated to 2024–2026 literature ranges.
 //
@@ -201,7 +201,7 @@ export const QUBIT_TOPOLOGIES: QubitTopology[] = [
   },
   {
     id: "ai-opt",
-    name: "Q-Architect AI Topology",
+    name: "ArQiteQ AI Topology",
     kind: "ai",
     avgDegree: 4.3,
     connectivity: 82,

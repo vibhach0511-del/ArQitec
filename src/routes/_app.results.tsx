@@ -11,7 +11,7 @@ import { useQA } from "@/lib/qa/store";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/results")({
-  head: () => ({ meta: [{ title: "Optimization Results — Q-Architect" }, { name: "description", content: "Headline deltas, baseline comparison, convergence trend, and report export." }] }),
+  head: () => ({ meta: [{ title: "Optimization Results — ArQiteQ" }, { name: "description", content: "Headline deltas, baseline comparison, convergence trend, and report export." }] }),
   component: ResultsPage,
 });
 
@@ -30,7 +30,7 @@ function ResultsPage() {
     <div className="p-6">
       <SectionHeader
         eyebrow={`Optimization Run · ${qa.hasRun ? "converged" : "live preview"}`}
-        title="Baseline vs Q-Architect optimized"
+        title="Baseline vs ArQiteQ optimized"
         description={`Headline deltas, five-method baseline comparison, and convergence for ${r.workload.name} on the ${r.material.short} profile.`}
         action={
           <div className="flex items-center gap-2">

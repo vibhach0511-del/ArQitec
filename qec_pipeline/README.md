@@ -52,4 +52,4 @@ Outputs land in `qec_pipeline/outputs/`:
 - Inject leakage + correlated bursts via Stim leakage extensions.
 - Pull live T1/T2/readout from IBM Quantum backend properties (`QiskitRuntimeService`).
 - Swap the analytic resource estimate for **Qualtran** / Azure Quantum Resource Estimator (both installed in `qai`) to get T-factory-aware physical-qubit + runtime counts.
-- Surface these results in the Q-Architect frontend (new "Error Model" / "Crossover" views fed by `summary.json`).
+- Surface these results in the ArQiteQ frontend (new "Error Model" / "Crossover" views fed by `summary.json`).

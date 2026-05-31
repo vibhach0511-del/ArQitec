@@ -4,7 +4,7 @@ import { Panel, SectionHeader } from "@/components/qa/primitives";
 import { useQA } from "@/lib/qa/store";
 
 export const Route = createFileRoute("/_app/agent")({
-  head: () => ({ meta: [{ title: "Architect Agent — Q-Architect" }, { name: "description", content: "AI reasoning trace for the active optimization run." }] }),
+  head: () => ({ meta: [{ title: "Architect Agent — ArQiteQ" }, { name: "description", content: "AI reasoning trace for the active optimization run." }] }),
   component: AgentPage,
 });
 

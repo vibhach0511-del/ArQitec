@@ -26,7 +26,7 @@ import {
 } from "@/lib/qa/surface-code";
 
 export const Route = createFileRoute("/_app/surface-code")({
-  head: () => ({ meta: [{ title: "Surface Code — Q-Architect" }, { name: "description", content: "Surface-code dashboard: distance vs overhead, the 1% threshold, decoders, magic-state distillation, and the Willow 2024 milestone." }] }),
+  head: () => ({ meta: [{ title: "Surface Code — ArQiteQ" }, { name: "description", content: "Surface-code dashboard: distance vs overhead, the 1% threshold, decoders, magic-state distillation, and the Willow 2024 milestone." }] }),
   component: SurfaceCodePage,
 });
 

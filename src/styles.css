@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Q-Architect — scientific dark theme.
+ * ArQiteQ — scientific dark theme.
  * Neon accents (cyan/violet/blue/green) on deep blue-black surfaces.
  */
 
@@ -65,7 +65,7 @@
 
 :root {
   --radius: 0.5rem;
-  /* Q-Architect uses a single dark palette */
+  /* ArQiteQ uses a single dark palette */
   --background: oklch(0.16 0.02 250);
   --foreground: oklch(0.96 0.01 240);
   --surface-1: oklch(0.19 0.022 250);

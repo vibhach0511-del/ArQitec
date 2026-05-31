@@ -7,7 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useQA } from "@/lib/qa/store";
 
 export const Route = createFileRoute("/_app/workspace")({
-  head: () => ({ meta: [{ title: "Workspace — Q-Architect" }, { name: "description", content: "Design workspace: live chip canvas, qubit inspector, and AI agent reasoning." }] }),
+  head: () => ({ meta: [{ title: "Workspace — ArQiteQ" }, { name: "description", content: "Design workspace: live chip canvas, qubit inspector, and AI agent reasoning." }] }),
   component: WorkspacePage,
 });
 
@@ -29,7 +29,7 @@ function WorkspacePage() {
               selected={selected}
               onSelect={setSelected}
               accent={qa.topology.kind === "ai" ? "violet" : "cyan"}
-              label={`Live wafer · die A4 · ${qa.topology.kind === "ai" ? "Q-Architect AI" : qa.topology.name}`}
+              label={`Live wafer · die A4 · ${qa.topology.kind === "ai" ? "ArQiteQ AI" : qa.topology.name}`}
             />
           </div>
         </Panel>

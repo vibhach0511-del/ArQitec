@@ -1,4 +1,4 @@
-// Q-Architect — core domain types.
+// ArQiteQ — core domain types.
 // These model the inputs (materials, topologies, workloads, QEC codes) and the
 // outputs (scores, routing, recommendations) of the local optimization engine.
 //

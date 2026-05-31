@@ -1,5 +1,5 @@
 
-# Q-Architect — Frontend Build Plan
+# ArQiteQ — Frontend Build Plan
 
 A polished, demo-ready frontend for an AI + quantum optimizer platform aimed at semiconductor R&D teams. Dark mode, scientific/EDA aesthetic, neon cyan/violet/blue/green accents, dense engineering data presented cleanly. All data mocked.
 
@@ -39,7 +39,7 @@ Each route gets its own `head()` with route-specific title + description. Agent 
 ## Page contents
 
 **1. Landing (`/`)**
-- Hero: "Q-Architect" wordmark with subtle chip-lattice background SVG, subtitle, primary CTA "Open Workspace", secondary "View Demo Results"
+- Hero: "ArQiteQ" wordmark with subtle chip-lattice background SVG, subtitle, primary CTA "Open Workspace", secondary "View Demo Results"
 - 3 value cards: Topology Optimization · Error-Correction Readiness · Materials-Aware DSE
 - Strip of mock "trusted by" research labs (subtle, monochrome)
 - Footer with version / build hash mock

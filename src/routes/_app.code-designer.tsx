@@ -19,7 +19,7 @@ import {
 import type { CharacteristicKey, CodeCharacteristics } from "@/lib/qa/types";
 
 export const Route = createFileRoute("/_app/code-designer")({
-  head: () => ({ meta: [{ title: "Code Designer — Q-Architect" }, { name: "description", content: "Inverse QEC design: dial a code's characteristics and find the material it requires." }] }),
+  head: () => ({ meta: [{ title: "Code Designer — ArQiteQ" }, { name: "description", content: "Inverse QEC design: dial a code's characteristics and find the material it requires." }] }),
   component: CodeDesignerPage,
 });
 

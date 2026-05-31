@@ -5,10 +5,10 @@ import { ArrowRight, Network, ShieldCheck, FlaskConical, CircuitBoard, Sparkles 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Q-Architect — Quantum Chip Co-Design" },
-      { name: "description", content: "AI-powered quantum chip architecture co-design for semiconductor R&D teams. Explore materials, topologies, error-correction, and tapeout-readiness before silicon." },
-      { property: "og:title", content: "Q-Architect — Quantum Chip Co-Design" },
-      { property: "og:description", content: "AI + quantum optimizer for semiconductor R&D teams designing quantum chips." },
+      { title: "ArQiteQ — QEC Recommendation Engine" },
+      { name: "description", content: "QEC recommendation engine for superconducting quantum chips. Recommends optimal error-correction codes and ranks material stacks from noise profile to fabrication targets." },
+      { property: "og:title", content: "ArQiteQ — QEC Recommendation Engine" },
+      { property: "og:description", content: "Given a material noise profile, ArQiteQ recommends the optimal QEC code and ranks Layer 2 material stacks across thousands of combinations." },
     ],
   }),
   component: Index,
@@ -24,8 +24,8 @@ function Index() {
             <CircuitBoard className="h-4 w-4 text-cyan" />
           </div>
           <div className="leading-none">
-            <div className="text-sm font-semibold tracking-tight">Q-Architect</div>
-            <div className="mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">co-design platform</div>
+            <div className="text-sm font-semibold tracking-tight">ArQiteQ</div>
+            <div className="mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">QEC recommendation engine</div>
           </div>
         </div>
         <nav className="hidden md:flex items-center gap-6 mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
@@ -42,17 +42,17 @@ function Index() {
         <div className="mono text-[10px] uppercase tracking-[0.3em] text-cyan mb-5">
           <span className="inline-flex items-center gap-1.5">
             <span className="h-1 w-1 rounded-full bg-cyan animate-pulse" />
-            qa · build 0.9.4 · semiconductor R&D
+            arqiteq · hackathon 2026 · superconducting QEC
           </span>
         </div>
         <h1 className="text-5xl md:text-7xl font-semibold tracking-tight leading-[1.02] max-w-5xl">
-          AI-powered quantum chip <br />
+          QEC codes matched to <br />
           <span className="bg-gradient-to-r from-cyan via-neon-blue to-violet bg-clip-text text-transparent">
-            architecture co-design
+            your material stack
           </span>
         </h1>
         <p className="mt-6 max-w-2xl text-base text-muted-foreground leading-relaxed">
-          Q-Architect helps semiconductor R&D teams explore qubit materials, layout topologies, error-correction strategies, and manufacturability — all before tapeout. Built for chip architects who think in lattice constants and code distances.
+          ArQiteQ is a QEC recommendation engine for superconducting quantum chips, built at Hackathon 2026. Given a material&apos;s noise profile — bias ratio and two-qubit gate error rate — it recommends the optimal quantum error-correction code (Surface, XZZX, etc.) and ranks Layer 2 material stacks across thousands of combinations. The engine covers the full pipeline from qubit and control hardware selection through to fabrication targets, replacing years of trial-and-error with a single lookup.
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <Link to="/workspace" className="inline-flex items-center gap-2 rounded-md bg-cyan px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-cyan/90 transition">
@@ -96,7 +96,7 @@ function Index() {
               <div className="mono text-[10px] uppercase tracking-[0.18em] text-cyan">trusted by R&D pre-tapeout teams</div>
               <div className="mt-1 text-sm text-muted-foreground">Compatible with major fab process kits and quantum SDKs.</div>
             </div>
-            <div className="mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">QA · co-design v0.9.4</div>
+            <div className="mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">ArQiteQ · Hackathon 2026</div>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-x-6 gap-y-3 mono text-[11px] text-muted-foreground/80 uppercase tracking-[0.16em]">
             {["Qiskit", "Cirq", "PennyLane", "TKET", "OpenQASM 3", "Stim", "Cadence", "Synopsys", "GDSII", "IBM Quantum", "Pasqal", "Quantinuum"].map(s => (
@@ -108,7 +108,7 @@ function Index() {
 
       <footer className="relative z-10 border-t border-border/60 bg-surface-1/40">
         <div className="mx-auto max-w-7xl px-6 py-5 flex flex-wrap items-center justify-between gap-3 mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-          <span>© 2026 Q-Architect Labs · Confidential pre-tapeout build</span>
+          <span>© 2026 ArQiteQ · Hackathon 2026</span>
           <span>commit 9f2c1a · region: us-west-2 · region replica nominal</span>
         </div>
       </footer>

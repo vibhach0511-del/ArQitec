@@ -1,4 +1,4 @@
-// Q-Architect — local optimization engine.
+// ArQiteQ — local optimization engine.
 // Pure, deterministic functions. No backend, no API keys. Given a configuration
 // (material + topology + workload [+ optional QEC override]) these compute
 // routing overhead, a weighted architecture score, a QEC recommendation,
@@ -272,8 +272,8 @@ export function generateExplanation(
 
   const lead =
     topology.kind === "ai"
-      ? "Q-Architect selected the AI-optimized topology"
-      : `Q-Architect selected ${topology.name}`;
+      ? "ArQiteQ selected the AI-optimized topology"
+      : `ArQiteQ selected ${topology.name}`;
 
   return `${lead} because ${reasons.join("; ")}. Overall architecture score: ${score.architectureScore}/100.`;
 }
@@ -434,7 +434,7 @@ export function exportMarkdown(result: OptimizationResult): string {
   const { material, topology, workload, score, routing, qec, baselines, benchmarks } = result;
   const line = (k: string, v: string | number) => `| ${k} | ${v} |`;
   return [
-    `# Q-Architect Recommendation`,
+    `# ArQiteQ Recommendation`,
     ``,
     `_Generated ${result.timestamp} · seed ${result.seed} · qubit budget ${QUBIT_BUDGET}_`,
     ``,

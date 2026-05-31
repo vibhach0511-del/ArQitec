@@ -23,7 +23,7 @@ import { MATERIALS_META } from "@/lib/qa/materials-data";
 import { groundPlaneScore } from "@/lib/qa/ground-plane";
 
 export const Route = createFileRoute("/_app/codesign")({
-  head: () => ({ meta: [{ title: "Co-Design Selector — Q-Architect" }, { name: "description", content: "Input → hardware constraints → material library → QEC matching → best material + code." }] }),
+  head: () => ({ meta: [{ title: "Co-Design Selector — ArQiteQ" }, { name: "description", content: "Input → hardware constraints → material library → QEC matching → best material + code." }] }),
   component: CodesignPage,
 });
 
@@ -98,7 +98,7 @@ function CodesignPage() {
       <SectionHeader
         eyebrow="Co-Design Workflow"
         title="Input → Constraints → Materials → QEC Matching → Output"
-        description="Pick the stack; Q-Architect derives hardware constraints, runs the (material × code) matching engine, and returns the best material + code — or the target spec for a new material when nothing fits."
+        description="Pick the stack; ArQiteQ derives hardware constraints, runs the (material × code) matching engine, and returns the best material + code — or the target spec for a new material when nothing fits."
       />
 
       {/* ============================ INPUT LAYER ============================ */}

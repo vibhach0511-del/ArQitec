@@ -9,7 +9,7 @@ import { useQA } from "@/lib/qa/store";
 import type { WorkloadId } from "@/lib/qa/types";
 
 export const Route = createFileRoute("/_app/benchmarks")({
-  head: () => ({ meta: [{ title: "Workload Benchmarks — Q-Architect" }, { name: "description", content: "QAOA, VQE, QFT, random circuit, and QEC syndrome benchmarks baseline vs optimized." }] }),
+  head: () => ({ meta: [{ title: "Workload Benchmarks — ArQiteQ" }, { name: "description", content: "QAOA, VQE, QFT, random circuit, and QEC syndrome benchmarks baseline vs optimized." }] }),
   component: BenchmarksPage,
 });
 
@@ -54,7 +54,7 @@ function BenchmarksPage() {
     <div className="p-6">
       <SectionHeader
         eyebrow="Workload Benchmark"
-        title="Baseline vs Q-Architect optimized"
+        title="Baseline vs ArQiteQ optimized"
         description="Square-grid baseline vs the current topology. Select a workload to recompute SWAPs, depth, fidelity, crosstalk, and routing congestion."
       />
       <div className="flex flex-wrap gap-1.5 mb-4">

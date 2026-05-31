@@ -1,4 +1,4 @@
-// Q-Architect — Code Designer engine (Code -> Material, inverse design).
+// ArQiteQ — Code Designer engine (Code -> Material, inverse design).
 // Treat each QEC code as an engineering option with measurable tradeoffs.
 // Given a target code profile (the 10 characteristics), find the nearest known
 // code, GENERATE the required material spec, and RANK the closest real

@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import type { Accent, MaterialProfile } from "@/lib/qa/types";
 
 export const Route = createFileRoute("/_app/materials")({
-  head: () => ({ meta: [{ title: "Materials & Process — Q-Architect" }, { name: "description", content: "Superconducting-qubit taxonomy: charge, flux, and phase qubit families." }] }),
+  head: () => ({ meta: [{ title: "Materials & Process — ArQiteQ" }, { name: "description", content: "Superconducting-qubit taxonomy: charge, flux, and phase qubit families." }] }),
   component: MaterialsPage,
 });
 

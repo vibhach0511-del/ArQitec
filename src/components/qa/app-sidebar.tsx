@@ -55,7 +55,7 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div className="flex flex-col leading-none">
-              <span className="text-sm font-semibold tracking-tight text-foreground">Q-Architect</span>
+              <span className="text-sm font-semibold tracking-tight text-foreground">ArQiteQ</span>
               <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mono">qa · v0.9.4</span>
             </div>
           )}

@@ -1,4 +1,4 @@
-// Q-Architect — client state store.
+// ArQiteQ — client state store.
 // Holds the active architecture selection and exposes derived results, the
 // simulated optimization run, and report export. Wrapped around the /_app layout
 // so every workspace route shares one configuration.

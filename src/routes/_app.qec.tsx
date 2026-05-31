@@ -6,7 +6,7 @@ import { useQA } from "@/lib/qa/store";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/qec")({
-  head: () => ({ meta: [{ title: "Error Correction Advisor — Q-Architect" }, { name: "description", content: "Compare surface, heavy-hex, color, and repetition codes for the current chip profile." }] }),
+  head: () => ({ meta: [{ title: "Error Correction Advisor — ArQiteQ" }, { name: "description", content: "Compare surface, heavy-hex, color, and repetition codes for the current chip profile." }] }),
   component: QecPage,
 });
 

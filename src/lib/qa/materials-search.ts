@@ -1,4 +1,4 @@
-// Q-Architect — combinatorial materials search (quantum vs classical), via XpyQ.
+// ArQiteQ — combinatorial materials search (quantum vs classical), via XpyQ.
 // Searches material STACKS (electrode x substrate x junction x superinductor)
 // for the best QEC fit, and projects the cost of the search:
 //   - classical brute force on CPU / GPU (linear in the combination count N)
