@@ -1,12 +1,12 @@
-# Q-ArQite
+# ArQiteQ
 
 > **Architecting the Quantum Stack: Intelligent Matching of Error-Correcting Codes to Quantum Materials**
 
 ---
 
-## What is Q-ArQite?
+## What is ArQiteQ?
 
-Q-ArQite is an AI agent that bridges the gap between **quantum materials science** and **quantum error correction (QEC) theory**. Given a physicist's hardware constraints—qubit type, control electronics, cryogenics, and target performance—Q-ArQite recommends the optimal error-correcting code and simulates its performance on that specific material stack.
+ArQiteQ is an AI agent that bridges the gap between **quantum materials science** and **quantum error correction (QEC) theory**. Given a physicist's hardware constraints—qubit type, control electronics, cryogenics, and target performance—Q-ArQite recommends the optimal error-correcting code and simulates its performance on that specific material stack.
 
 The core insight: **materials and codes have a many-to-many relationship**, and the best match depends on tradeoffs between error suppression, hardware overhead, and computational cost.
 
@@ -20,7 +20,7 @@ Quantum computing hardware is bottlenecked by **decoherence** and **gate errors*
 - **QEC theorists** design codes assuming idealized hardware, ignoring real material constraints like crosstalk, leakage, and fabrication yield.
 - **No tool exists** to systematically explore the intersection of material properties and code performance.
 
-Q-ArQite closes this gap.
+ArQiteQ closes this gap.
 
 ---
 
