@@ -17,6 +17,7 @@ import { Route as AppSurfaceCodeRouteImport } from './routes/_app.surface-code'
 import { Route as AppResultsRouteImport } from './routes/_app.results'
 import { Route as AppQecRouteImport } from './routes/_app.qec'
 import { Route as AppMaterialsRouteImport } from './routes/_app.materials'
+import { Route as AppCodesignRouteImport } from './routes/_app.codesign'
 import { Route as AppCodeDesignerRouteImport } from './routes/_app.code-designer'
 import { Route as AppBenchmarksRouteImport } from './routes/_app.benchmarks'
 import { Route as AppAgentRouteImport } from './routes/_app.agent'
@@ -61,6 +62,11 @@ const AppMaterialsRoute = AppMaterialsRouteImport.update({
   path: '/materials',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCodesignRoute = AppCodesignRouteImport.update({
+  id: '/codesign',
+  path: '/codesign',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppCodeDesignerRoute = AppCodeDesignerRouteImport.update({
   id: '/code-designer',
   path: '/code-designer',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/agent': typeof AppAgentRoute
   '/benchmarks': typeof AppBenchmarksRoute
   '/code-designer': typeof AppCodeDesignerRoute
+  '/codesign': typeof AppCodesignRoute
   '/materials': typeof AppMaterialsRoute
   '/qec': typeof AppQecRoute
   '/results': typeof AppResultsRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/agent': typeof AppAgentRoute
   '/benchmarks': typeof AppBenchmarksRoute
   '/code-designer': typeof AppCodeDesignerRoute
+  '/codesign': typeof AppCodesignRoute
   '/materials': typeof AppMaterialsRoute
   '/qec': typeof AppQecRoute
   '/results': typeof AppResultsRoute
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/_app/agent': typeof AppAgentRoute
   '/_app/benchmarks': typeof AppBenchmarksRoute
   '/_app/code-designer': typeof AppCodeDesignerRoute
+  '/_app/codesign': typeof AppCodesignRoute
   '/_app/materials': typeof AppMaterialsRoute
   '/_app/qec': typeof AppQecRoute
   '/_app/results': typeof AppResultsRoute
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/agent'
     | '/benchmarks'
     | '/code-designer'
+    | '/codesign'
     | '/materials'
     | '/qec'
     | '/results'
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
     | '/agent'
     | '/benchmarks'
     | '/code-designer'
+    | '/codesign'
     | '/materials'
     | '/qec'
     | '/results'
@@ -158,6 +169,7 @@ export interface FileRouteTypes {
     | '/_app/agent'
     | '/_app/benchmarks'
     | '/_app/code-designer'
+    | '/_app/codesign'
     | '/_app/materials'
     | '/_app/qec'
     | '/_app/results'
@@ -229,6 +241,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMaterialsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/codesign': {
+      id: '/_app/codesign'
+      path: '/codesign'
+      fullPath: '/codesign'
+      preLoaderRoute: typeof AppCodesignRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/code-designer': {
       id: '/_app/code-designer'
       path: '/code-designer'
@@ -265,6 +284,7 @@ interface AppRouteChildren {
   AppAgentRoute: typeof AppAgentRoute
   AppBenchmarksRoute: typeof AppBenchmarksRoute
   AppCodeDesignerRoute: typeof AppCodeDesignerRoute
+  AppCodesignRoute: typeof AppCodesignRoute
   AppMaterialsRoute: typeof AppMaterialsRoute
   AppQecRoute: typeof AppQecRoute
   AppResultsRoute: typeof AppResultsRoute
@@ -278,6 +298,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAgentRoute: AppAgentRoute,
   AppBenchmarksRoute: AppBenchmarksRoute,
   AppCodeDesignerRoute: AppCodeDesignerRoute,
+  AppCodesignRoute: AppCodesignRoute,
   AppMaterialsRoute: AppMaterialsRoute,
   AppQecRoute: AppQecRoute,
   AppResultsRoute: AppResultsRoute,

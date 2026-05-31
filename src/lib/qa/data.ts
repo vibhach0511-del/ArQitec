@@ -20,9 +20,9 @@ import type {
 // Superconducting-qubit families (the Charge / Flux / Phase branches of the
 // taxonomy). The 3 families are groupings; the qubit types live in MATERIAL_PROFILES.
 export const QUBIT_FAMILIES: QubitFamily[] = [
-  { id: "charge", label: "Charge", regime: "EJ ≪ EC", accent: "violet" },
-  { id: "flux", label: "Flux", regime: "EJ ≫ EC", accent: "green" },
-  { id: "phase", label: "Phase", regime: "Large JJ, current-biased", accent: "amber" },
+  { id: "charge", label: "Charge Qubits", regime: "EJ ≪ EC", accent: "violet" },
+  { id: "flux", label: "Flux Qubits", regime: "EJ ≫ EC", accent: "green" },
+  { id: "phase", label: "Phase Qubits", regime: "Large JJ, current-biased", accent: "amber" },
 ];
 
 // Qubit catalogue — the superconducting-qubit taxonomy (Charge / Flux / Phase).
