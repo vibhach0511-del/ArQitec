@@ -30,7 +30,11 @@ OUT_TS = os.path.join(ROOT, "src", "lib", "qa", "materials-data.ts")
 OUT_JSON = os.path.join(os.path.dirname(__file__), "outputs", "materials_project.json")
 
 MP_URL = "https://api.materialsproject.org/materials/summary/"
-MP_FIELDS = "material_id,formula_pretty,density,band_gap,is_metal,energy_above_hull,symmetry"
+MP_FIELDS = ",".join([
+    "material_id", "formula_pretty", "density", "band_gap", "is_metal", "is_gap_direct",
+    "is_stable", "energy_above_hull", "formation_energy_per_atom", "total_magnetization",
+    "ordering", "nsites", "volume", "theoretical", "symmetry",
+])
 
 CHARGE = ["cooper-pair-box", "transmon", "xmon", "gatemon"]
 FLUX = ["rf-squid", "flux-qubit", "fluxonium"]
@@ -122,13 +126,23 @@ def mp_query(formula: str, key: str) -> dict | None:
         if not docs:
             return None
         best = min(docs, key=lambda d: d.get("energy_above_hull", 9e9))
+        sym = best.get("symmetry") or {}
         return {
             "mpId": best.get("material_id"),
             "density": best.get("density"),
             "bandGap": best.get("band_gap"),
             "isMetal": best.get("is_metal"),
+            "isGapDirect": best.get("is_gap_direct"),
+            "isStable": best.get("is_stable"),
             "eAboveHull": best.get("energy_above_hull"),
-            "crystalSystem": (best.get("symmetry") or {}).get("crystal_system"),
+            "formationEnergy": best.get("formation_energy_per_atom"),
+            "totalMagnetization": best.get("total_magnetization"),
+            "ordering": best.get("ordering"),
+            "nsites": best.get("nsites"),
+            "volume": best.get("volume"),
+            "theoretical": best.get("theoretical"),
+            "crystalSystem": sym.get("crystal_system"),
+            "spacegroup": sym.get("symbol"),
         }
     except Exception as e:  # noqa: BLE001
         print(f"    MP query failed for {formula}: {e}")
@@ -149,8 +163,10 @@ def ts_value(v) -> str:
 
 def export_ts(records: list[dict]):
     fields = ["id", "name", "formula", "role", "families", "pGate2q", "biasEta",
-              "t1Us", "t2Us", "mpId", "density", "bandGap", "isMetal", "eAboveHull",
-              "crystalSystem", "note"]
+              "t1Us", "t2Us", "mpId", "density", "bandGap", "isMetal", "isGapDirect",
+              "isStable", "eAboveHull", "formationEnergy", "totalMagnetization",
+              "ordering", "nsites", "volume", "theoretical", "crystalSystem",
+              "spacegroup", "note"]
     rows = []
     for r in records:
         parts = ", ".join(f"{f}: {ts_value(r.get(f))}" for f in fields)
@@ -166,7 +182,11 @@ export interface QubitMaterial {{
   id: string; name: string; formula: string; role: string; families: string[];
   pGate2q: number; biasEta: number; t1Us: number; t2Us: number;
   mpId: string | null; density: number | null; bandGap: number | null;
-  isMetal: boolean | null; eAboveHull: number | null; crystalSystem: string | null;
+  isMetal: boolean | null; isGapDirect: boolean | null; isStable: boolean | null;
+  eAboveHull: number | null; formationEnergy: number | null;
+  totalMagnetization: number | null; ordering: string | null;
+  nsites: number | null; volume: number | null; theoretical: boolean | null;
+  crystalSystem: string | null; spacegroup: string | null;
   note: string;
 }}
 
@@ -199,8 +219,13 @@ def main():
             "families": m["families"], "pGate2q": m["p_gate_2q"], "biasEta": m["bias_eta"],
             "t1Us": m["T1_us"], "t2Us": m["T2_us"], "note": m["note"],
         }
-        rec.update(mp or {"mpId": None, "density": None, "bandGap": None,
-                          "isMetal": None, "eAboveHull": None, "crystalSystem": None})
+        rec.update(mp or {
+            "mpId": None, "density": None, "bandGap": None, "isMetal": None,
+            "isGapDirect": None, "isStable": None, "eAboveHull": None,
+            "formationEnergy": None, "totalMagnetization": None, "ordering": None,
+            "nsites": None, "volume": None, "theoretical": None,
+            "crystalSystem": None, "spacegroup": None,
+        })
         tag = rec["mpId"] or "no-mp-match"
         print(f"  {m['name']:<34} {m['formula']:<7} -> {tag}")
         records.append(rec)

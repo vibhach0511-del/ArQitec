@@ -393,9 +393,30 @@ export function platformForNode(node: QubitTypeNode): string {
 export const hardwareSupportsPlatform = (hw: ControlHardware, platform: string): boolean =>
   hw.supportsPlatforms.includes(platform);
 
+const clamp100 = (v: number) => Math.max(0, Math.min(100, v));
+
+// MP-property-driven material relevance (0-100). Hackathon-friendly: lean on
+// whatever Materials Project gives us (metal/insulator role fit, stability,
+// magnetism, experimental vs theoretical) rather than rigid noise thresholds.
+export function mpRelevance(m: QubitMaterial): number {
+  const wantsMetal = /electrode|superinductor|interconnect/.test(m.role);
+  const wantsDielectric = /substrate|dielectric|barrier|oxide/.test(m.role);
+  let roleFit = 60;
+  if (m.isMetal !== null) {
+    if (wantsMetal) roleFit = m.isMetal ? 100 : 30;
+    else if (wantsDielectric) roleFit = m.isMetal ? 35 : 100;
+  }
+  const stability = clamp100(100 - (m.eAboveHull ?? 0.1) * 250); // synthesizability
+  const magnetic = (m.ordering && m.ordering !== "NM") || Math.abs(m.totalMagnetization ?? 0) > 0.1;
+  const magOk = magnetic ? 10 : 100; // magnetism is a qubit killer
+  const cryst = clamp100((m.theoretical === false ? 70 : 50) + (m.crystalSystem && m.crystalSystem !== "Triclinic" ? 20 : 0));
+  return Math.round(clamp100(0.35 * roleFit + 0.3 * stability + 0.25 * magOk + 0.1 * cryst) * 10) / 10;
+}
+
 export interface PairResult {
   material: QubitMaterial;
   code: QECCode;
+  relevance: number;
   feasible: boolean;
   distance: number | null;
   perLogical: number | null;
@@ -411,13 +432,18 @@ function pairResult(
   c: HardwareConstraints, maxPhysical: number,
 ): PairResult {
   const p = effectiveP2q(material, c);
+  const mpRel = mpRelevance(material);
+  // Relevance leans on MP properties (60%) + a SOFT QEC-fit term (40%), so the
+  // ranking is property-driven and nothing is hard-excluded.
+  const rel = (feasibleTier: number) => Math.round((0.6 * mpRel + 0.4 * feasibleTier) * 10) / 10;
   const base = { material, code, effectiveP2q: p };
+
   if (p >= code.threshold) {
-    return { ...base, feasible: false, distance: null, perLogical: null, totalPhysical: null, wallClockS: null, withinBudget: false, reason: `p₂q ${(p * 100).toFixed(2)}% ≥ ${code.name} threshold ${(code.threshold * 100).toFixed(1)}%` };
+    return { ...base, relevance: rel(30), feasible: false, distance: null, perLogical: null, totalPhysical: null, wallClockS: null, withinBudget: false, reason: `p₂q ${(p * 100).toFixed(2)}% ≥ ${code.name} threshold ${(code.threshold * 100).toFixed(1)}%` };
   }
   let d = requiredDistance(p, target.logicalErrorTarget);
   if (d === null) {
-    return { ...base, feasible: false, distance: null, perLogical: null, totalPhysical: null, wallClockS: null, withinBudget: false, reason: "above threshold for this code" };
+    return { ...base, relevance: rel(30), feasible: false, distance: null, perLogical: null, totalPhysical: null, wallClockS: null, withinBudget: false, reason: "above threshold for this code" };
   }
   if (code.biasTailored) {
     const eta = Math.max(1, material.biasEta);
@@ -428,9 +454,10 @@ function pairResult(
   const totalPhysical = perLogical * target.logicalQubits;
   // Wall-clock ≈ cycle time × (d rounds per logical op) × logical ops.
   const wallClockS = c.cycleTimeNs * 1e-9 * di * target.logicalOps;
+  const withinBudget = totalPhysical <= maxPhysical;
   return {
-    ...base, feasible: true, distance: d, perLogical, totalPhysical, wallClockS,
-    withinBudget: totalPhysical <= maxPhysical, reason: "",
+    ...base, relevance: rel(withinBudget ? 100 : 65), feasible: true, distance: d,
+    perLogical, totalPhysical, wallClockS, withinBudget, reason: "",
   };
 }
 
@@ -473,8 +500,26 @@ export interface WorkflowOutput {
   best: PairResult | null;
   newSpec: NewMaterialSpec | null;
   confidence: "high" | "medium" | "low";
+  confidencePct: number;
   caveats: string[];
   headline: string;
+}
+
+// Numeric confidence (0-100) derived from MP relevance + feasibility + compat;
+// the high/medium/low label is read off the same number for consistency.
+function confidenceFrom(
+  best: PairResult | null, mode: OutputMode, compatIssue: boolean, modern: boolean,
+): { pct: number; label: "high" | "medium" | "low" } {
+  let pct: number;
+  if (mode === "existing") pct = best?.relevance ?? 60;
+  else if (mode === "existing-over-budget") pct = (best?.relevance ?? 50) * 0.6;
+  else if (mode === "new-material") pct = 35;
+  else pct = (best?.relevance ?? 40) * 0.45;
+  if (compatIssue) pct *= 0.8;
+  if (modern && mode === "existing") pct = Math.min(96, pct + 8);
+  pct = Math.round(clamp100(Math.max(8, pct)));
+  const label = pct >= 75 ? "high" : pct >= 50 ? "medium" : "low";
+  return { pct, label };
 }
 
 export interface WorkflowResult {
@@ -507,6 +552,7 @@ export function runWorkflow(
     for (const code of CODES) pairs.push(pairResult(material, code, target, constraints, maxPhysical));
   }
   pairs.sort((a, b) => {
+    if (b.relevance !== a.relevance) return b.relevance - a.relevance; // MP-driven first
     const rank = (r: PairResult) => (r.feasible && r.withinBudget ? 0 : r.feasible ? 1 : 2);
     if (rank(a) !== rank(b)) return rank(a) - rank(b);
     return (a.totalPhysical ?? Infinity) - (b.totalPhysical ?? Infinity);
@@ -519,28 +565,40 @@ export function runWorkflow(
   if (constraints.thermalPenalty > 0.1) caveats.push(`Cold stage at ${(constraints.thermalFloorK * 1000).toFixed(0)} mK adds a ${(constraints.thermalPenalty * 100).toFixed(0)}% thermal error penalty`);
   caveats.push("Material noise (T1/T2, gate error) is curated from the literature; Materials Project supplies the crystallographic / electronic properties. Logical-error numbers are analytic surface-code estimates (PanQEC + Stim is the backend upgrade).");
 
-  const blocked = !controlOk || !cryoOk || !decodeOk || materials.length === 0;
+  const compatIssue = !controlOk || !cryoOk || !decodeOk;
   const feasibleWithin = pairs.find((p) => p.feasible && p.withinBudget) ?? null;
   const feasibleAny = pairs.find((p) => p.feasible) ?? null;
+  const topByRelevance = pairs[0] ?? null;
 
-  let output: WorkflowOutput;
+  let mode: OutputMode;
+  let best: PairResult | null;
+  let newSpec: NewMaterialSpec | null = null;
+  let headline: string;
+  let extra: string[] = [];
+
   if (materials.length === 0) {
-    output = { mode: "new-material", best: null, newSpec: newMaterialSpec(target, maxPhysical), confidence: "low",
-      caveats: [`No catalogue material maps to "${node.label}" — showing the target spec a new material would need.`, ...caveats],
-      headline: `No material is catalogued for ${node.label} — here is the spec to develop one.` };
-  } else if (!blocked && feasibleWithin) {
-    const modern = feasibleWithin.material.t1Us >= 80 && feasibleWithin.effectiveP2q < 0.008;
-    output = { mode: "existing", best: feasibleWithin, newSpec: null, confidence: modern ? "high" : "medium", caveats,
-      headline: `${feasibleWithin.material.name} + ${feasibleWithin.code.name} meets ${target.name} within ${maxPhysical.toLocaleString()} qubits.` };
-  } else if (!blocked && feasibleAny) {
-    output = { mode: "existing-over-budget", best: feasibleAny, newSpec: newMaterialSpec(target, maxPhysical), confidence: "low",
-      caveats: [`Best existing material needs ${feasibleAny.totalPhysical?.toLocaleString()} qubits — over the ${maxPhysical.toLocaleString()} budget.`, ...caveats],
-      headline: `No catalogued material fits ${maxPhysical.toLocaleString()} qubits — closest is ${feasibleAny.material.name} + ${feasibleAny.code.name}; a new material spec is suggested.` };
+    mode = "new-material"; best = null; newSpec = newMaterialSpec(target, maxPhysical);
+    extra = [`No catalogue material maps to "${node.label}" — showing the target spec a new material would need.`];
+    headline = `No material is catalogued for ${node.label} — here is the spec to develop one.`;
+  } else if (feasibleWithin) {
+    mode = "existing"; best = feasibleWithin;
+    headline = `${feasibleWithin.material.name} + ${feasibleWithin.code.name} fits ${target.name} within ${maxPhysical.toLocaleString()} qubits (relevancy ${feasibleWithin.relevance}/100).`;
+  } else if (feasibleAny) {
+    mode = "existing-over-budget"; best = feasibleAny; newSpec = newMaterialSpec(target, maxPhysical);
+    extra = [`Most relevant feasible material needs ${feasibleAny.totalPhysical?.toLocaleString()} qubits — over the ${maxPhysical.toLocaleString()} budget.`];
+    headline = `${feasibleAny.material.name} + ${feasibleAny.code.name} is the most relevant fit but exceeds ${maxPhysical.toLocaleString()} qubits; a new-material spec is suggested.`;
   } else {
-    output = { mode: "infeasible", best: feasibleAny, newSpec: newMaterialSpec(target, maxPhysical), confidence: "low",
-      caveats: blocked && (!controlOk || !cryoOk || !decodeOk) ? caveats : ["No code keeps this material below threshold for the target.", ...caveats],
-      headline: blocked ? "Selection is incompatible — see caveats." : `No catalogued material reaches ${target.name}; a new material spec is suggested.` };
+    mode = "infeasible"; best = topByRelevance; newSpec = newMaterialSpec(target, maxPhysical);
+    extra = ["No code keeps these materials below threshold for this target; ranking is by Materials-Project relevance."];
+    headline = `No catalogued material reaches ${target.name}. Most relevant by MP properties: ${topByRelevance?.material.name ?? "n/a"}; a new-material spec is suggested.`;
   }
+
+  const modern = !!best && best.material.t1Us >= 80 && best.effectiveP2q < 0.008;
+  const { pct, label } = confidenceFrom(best, mode, compatIssue, modern);
+  const output: WorkflowOutput = {
+    mode, best, newSpec, confidence: label, confidencePct: pct,
+    caveats: [...extra, ...caveats], headline,
+  };
 
   return { constraints, controlOk, cryoOk, pairs, materials, output };
 }

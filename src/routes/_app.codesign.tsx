@@ -1,8 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Atom, Cpu, Snowflake, Target as TargetIcon, Check, Trophy, TriangleAlert, ShieldCheck, X, CornerDownRight, Gauge, FlaskConical } from "lucide-react";
+import { Atom, Cpu, Snowflake, Target as TargetIcon, Check, Trophy, TriangleAlert, ShieldCheck, X, CornerDownRight, Gauge, FlaskConical, Layers, Rocket } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from "recharts";
 import { Panel, SectionHeader, MetricCard } from "@/components/qa/primitives";
 import { cn } from "@/lib/utils";
+import {
+  STACK_BUCKETS, SCALE_REFERENCE, bestStack, combinationCount, searchProjection, sweepProjection,
+} from "@/lib/qa/materials-search";
 import {
   CONTROL_OPTIONS,
   CRYO_OPTIONS,
@@ -57,6 +61,13 @@ function CodesignPage() {
 
   const wf = useMemo(() => runWorkflow(node, control, cryo, target, maxPhysical), [node, control, cryo, target, maxPhysical]);
   const { constraints, output } = wf;
+
+  // Combinatorial materials search (XpyQ) projection.
+  const combos = combinationCount();
+  const proj = useMemo(() => searchProjection(combos), [combos]);
+  const scaleProj = useMemo(() => searchProjection(SCALE_REFERENCE), []);
+  const best = useMemo(() => bestStack(target), [target]);
+  const sweep = useMemo(() => sweepProjection(), []);
   const confColor = output.confidence === "high" ? "text-neon-green" : output.confidence === "medium" ? "text-amber" : "text-danger";
 
   return (
@@ -152,6 +163,7 @@ function CodesignPage() {
                   <th className="text-right px-4 py-2.5">d</th>
                   <th className="text-right px-4 py-2.5">Total physical</th>
                   <th className="text-right px-4 py-2.5">Wall-clock</th>
+                  <th className="text-left px-4 py-2.5">Relevance</th>
                   <th className="text-left px-4 py-2.5">Status</th>
                 </tr>
               </thead>
@@ -164,11 +176,19 @@ function CodesignPage() {
                       {p.material.role}
                       {p.material.mpId && <span className="mono text-cyan"> · {p.material.mpId}</span>}
                       {p.material.crystalSystem && <span> · {p.material.crystalSystem}</span>}
+                      {p.material.isStable && <span className="text-neon-green"> · stable</span>}
+                      {p.material.ordering && p.material.ordering !== "NM" && <span className="text-danger"> · {p.material.ordering} magnetic</span>}
                     </td>
                     <td className="px-4 py-2.5 text-violet mono text-xs">{p.code.name}</td>
                     <td className="px-4 py-2.5 text-right mono">{p.distance !== null ? p.distance.toFixed(1) : "—"}</td>
                     <td className="px-4 py-2.5 text-right mono text-cyan">{fmtN(p.totalPhysical)}</td>
                     <td className="px-4 py-2.5 text-right mono text-muted-foreground">{fmtTime(p.wallClockS)}</td>
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <div className="h-1 w-12 rounded-full bg-surface-3/80 overflow-hidden"><div className="h-full rounded-full bg-cyan" style={{ width: `${p.relevance}%` }} /></div>
+                        <span className="mono text-[10px] tabular-nums text-cyan">{p.relevance}</span>
+                      </div>
+                    </td>
                     <td className="px-4 py-2.5">
                       {p.feasible && p.withinBudget ? (
                         <span className="inline-flex items-center gap-1 mono text-[10px] text-neon-green"><Check className="h-3 w-3" /> in budget</span>
@@ -197,7 +217,7 @@ function CodesignPage() {
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <span className="mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Recommendation</span>
-            <span className={cn("mono text-[10px] uppercase tracking-[0.18em]", confColor)}>· {output.confidence} confidence</span>
+            <span className={cn("mono text-[10px] uppercase tracking-[0.18em]", confColor)}>· {output.confidencePct}% · {output.confidence} confidence</span>
           </div>
           <div className="mt-0.5 text-sm text-foreground">{output.headline}</div>
         </div>
@@ -212,14 +232,17 @@ function CodesignPage() {
               <MetricCard label="Physical qubits" value={fmtN(output.best.totalPhysical)} tone={output.best.withinBudget ? "good" : "warn"} hint={`${fmtN(output.best.perLogical)}/logical`} />
               <MetricCard label="Wall-clock" value={fmtTime(output.best.wallClockS)} tone="neutral" />
               <MetricCard label="Effective p₂q" value={`${(output.best.effectiveP2q * 100).toFixed(2)}`} unit="%" tone="warn" />
+              <MetricCard label="MP relevance" value={output.best.relevance} unit="/100" tone={output.best.relevance > 70 ? "good" : "warn"} />
               <MetricCard label="η (bias)" value={output.best.material.biasEta} tone="neutral" />
               <MetricCard label="Within budget" value={output.best.withinBudget ? "yes" : "no"} tone={output.best.withinBudget ? "good" : "warn"} />
             </div>
             <div className="border-t border-border/60 px-4 py-2.5 flex flex-wrap items-center gap-1.5 mono text-[10px] text-muted-foreground">
               <span className="rounded border border-border/60 bg-surface-2/50 px-1.5 py-0.5">role: {output.best.material.role}</span>
-              {output.best.material.crystalSystem && <span className="rounded border border-border/60 bg-surface-2/50 px-1.5 py-0.5">{output.best.material.crystalSystem}</span>}
+              {output.best.material.crystalSystem && <span className="rounded border border-border/60 bg-surface-2/50 px-1.5 py-0.5">{output.best.material.crystalSystem} {output.best.material.spacegroup ?? ""}</span>}
               {output.best.material.density !== null && <span className="rounded border border-border/60 bg-surface-2/50 px-1.5 py-0.5">ρ {output.best.material.density?.toFixed(1)} g/cm³</span>}
               {output.best.material.isMetal !== null && <span className="rounded border border-border/60 bg-surface-2/50 px-1.5 py-0.5">{output.best.material.isMetal ? "metal" : `gap ${output.best.material.bandGap?.toFixed(1)} eV`}</span>}
+              {output.best.material.isStable !== null && <span className="rounded border border-border/60 bg-surface-2/50 px-1.5 py-0.5">{output.best.material.isStable ? "stable (on hull)" : "metastable"}</span>}
+              {output.best.material.ordering && <span className="rounded border border-border/60 bg-surface-2/50 px-1.5 py-0.5">{output.best.material.ordering}</span>}
               <span className="text-muted-foreground/70">via Materials Project</span>
             </div>
           </Panel>
@@ -249,7 +272,7 @@ function CodesignPage() {
       </div>
 
       <Panel title="Confidence & caveats" subtitle="Model assumptions and constraints"
-        action={<span className={cn("mono text-[11px] uppercase tracking-[0.18em] inline-flex items-center gap-1", confColor)}><ShieldCheck className="h-3 w-3" /> {output.confidence}</span>}>
+        action={<span className={cn("mono text-[11px] uppercase tracking-[0.18em] inline-flex items-center gap-1", confColor)}><ShieldCheck className="h-3 w-3" /> {output.confidencePct}% · {output.confidence}</span>}>
         <ul className="p-4 space-y-1.5">
           {output.caveats.map((c, i) => (
             <li key={i} className="flex items-start gap-2 text-[12px] text-muted-foreground">
@@ -259,6 +282,78 @@ function CodesignPage() {
           ))}
         </ul>
       </Panel>
+
+      {/* ============ COMBINATORIAL MATERIALS SEARCH (XpyQ) ============ */}
+      <div className="mt-6">
+        <LayerLabel n="5" title="Combinatorial materials search — XpyQ (quantum vs classical)" />
+      </div>
+      <div className="mb-2 text-[12px] text-muted-foreground">
+        Search every material stack <span className="mono text-foreground">
+          {STACK_BUCKETS.map((b) => b.items.length).join(" × ")}
+        </span> (electrode × substrate × junction × superinductor) for the best QEC fit, and project the cost classically vs on a quantum search.
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 mb-4">
+        <MetricCard label="Combinations" value={fmtN(combos)} unit="stacks" tone="neutral" hint="E×S×J×SI" />
+        <MetricCard label="Classical CPU (8-core)" value={fmtTime(proj.cpuTimeS)} tone="warn" hint="linear in N" />
+        <MetricCard label="Classical GPU (2048×)" value={fmtTime(proj.gpuTimeS)} tone="neutral" hint="linear in N" />
+        <MetricCard label="Quantum (Grover)" value={fmtTime(proj.quantumS)} tone="good" hint={`${proj.groverIters} iters ~√N`} />
+        <MetricCard label={`Speedup vs GPU @ ${fmtN(SCALE_REFERENCE)}`} value={`${scaleProj.speedupGpu.toFixed(0)}×`} tone="good" hint="at full-catalogue scale" />
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <Panel className="xl:col-span-2" title="Search time vs combination count" subtitle="Classical scales as N; quantum search as √N · log–log"
+          action={<span className="mono text-[10px] uppercase tracking-[0.18em] text-cyan inline-flex items-center gap-1"><Rocket className="h-3 w-3" /> via XpyQ</span>}>
+          <div className="p-3 h-[320px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={sweep} margin={{ top: 16, right: 16, left: 8, bottom: 8 }}>
+                <CartesianGrid stroke="oklch(0.32 0.03 255 / 0.3)" vertical={false} />
+                <XAxis dataKey="n" type="number" scale="log" domain={["dataMin", "dataMax"]} tickFormatter={(v: number) => (v >= 1e6 ? `${(v / 1e6).toLocaleString()}M` : v.toExponential(0))} tick={{ fill: "oklch(0.68 0.03 250)", fontSize: 10, fontFamily: "JetBrains Mono" }} axisLine={false} tickLine={false} label={{ value: "combinations N", position: "insideBottom", offset: -4, fill: "oklch(0.68 0.03 250)", fontSize: 10 }} />
+                <YAxis scale="log" domain={["auto", "auto"]} tickFormatter={(v: number) => fmtTime(v)} tick={{ fill: "oklch(0.68 0.03 250)", fontSize: 10, fontFamily: "JetBrains Mono" }} axisLine={false} tickLine={false} width={56} />
+                <Tooltip formatter={(v: number) => fmtTime(v)} labelFormatter={(v: number) => `N = ${v.toLocaleString()}`} contentStyle={{ background: "oklch(0.22 0.025 252)", border: "1px solid oklch(0.3 0.03 255 / 0.6)", borderRadius: 8, fontFamily: "JetBrains Mono", fontSize: 11 }} />
+                <Legend wrapperStyle={{ fontFamily: "JetBrains Mono", fontSize: 10 }} />
+                <ReferenceLine x={combos} stroke="oklch(0.78 0.18 150)" strokeDasharray="4 4" label={{ value: "now", fill: "oklch(0.78 0.18 150)", fontSize: 9, position: "insideTopLeft" }} />
+                <Line type="monotone" dataKey="cpu" name="Classical CPU" stroke="oklch(0.7 0.22 25)" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="gpu" name="Classical GPU" stroke="oklch(0.82 0.16 75)" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="quantum" name="Quantum (Grover)" stroke="oklch(0.82 0.16 200)" strokeWidth={2} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </Panel>
+
+        <Panel title="Best stack found" subtitle={best ? `${best.code}${best.distance !== null ? ` · d≈${best.distance.toFixed(1)}` : ""}` : "no stack"}
+          action={<span className="mono text-[10px] text-muted-foreground inline-flex items-center gap-1"><Layers className="h-3 w-3 text-cyan" /> {fmtN(combos)} searched</span>}>
+          {best ? (
+            <div className="p-3 space-y-2">
+              <StackRow label="Electrode" m={best.electrode} />
+              <StackRow label="Substrate" m={best.substrate} />
+              <StackRow label="Junction" m={best.junction} />
+              <StackRow label="Superinductor" m={best.superinductor} />
+              <div className="border-t border-border/60 pt-2 flex flex-wrap gap-1.5 mono text-[10px]">
+                <span className="rounded border border-cyan/30 bg-cyan/10 px-1.5 py-0.5 text-cyan">relevance {best.relevance}/100</span>
+                <span className="rounded border border-border/60 bg-surface-2/50 px-1.5 py-0.5 text-muted-foreground">eff. p₂q {(best.effectiveP2q * 100).toFixed(2)}%</span>
+                <span className={cn("rounded border px-1.5 py-0.5", best.feasible ? "border-neon-green/30 bg-neon-green/10 text-neon-green" : "border-amber/30 bg-amber/10 text-amber")}>
+                  {best.feasible ? "feasible" : "infeasible"}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="p-6 text-sm text-muted-foreground text-center">No material stack available.</div>
+          )}
+        </Panel>
+      </div>
+    </div>
+  );
+}
+
+function StackRow({ label, m }: { label: string; m: { name: string; mpId: string | null } }) {
+  return (
+    <div className="flex items-center justify-between gap-2 text-xs">
+      <span className="text-muted-foreground mono text-[10px] uppercase tracking-[0.14em]">{label}</span>
+      <span className="text-foreground text-right">
+        {m.name}
+        {m.mpId && <span className="mono text-[10px] text-cyan"> · {m.mpId}</span>}
+      </span>
     </div>
   );
 }

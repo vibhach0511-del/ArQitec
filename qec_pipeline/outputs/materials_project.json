@@ -20,8 +20,17 @@
     "density": 16.260109663343133,
     "bandGap": 0.0,
     "isMetal": true,
+    "isGapDirect": false,
+    "isStable": true,
     "eAboveHull": 0.0,
-    "crystalSystem": "Tetragonal"
+    "formationEnergy": 0.0,
+    "totalMagnetization": 3.299999999999999e-06,
+    "ordering": "NM",
+    "nsites": 30,
+    "volume": 554.3708437019316,
+    "theoretical": false,
+    "crystalSystem": "Tetragonal",
+    "spacegroup": "P4_2/mnm"
   },
   {
     "id": "niobium",
@@ -48,8 +57,17 @@
     "density": 8.449671959986281,
     "bandGap": 0.0,
     "isMetal": true,
+    "isGapDirect": false,
+    "isStable": true,
     "eAboveHull": 0.0,
-    "crystalSystem": "Cubic"
+    "formationEnergy": 0.0,
+    "totalMagnetization": 4e-06,
+    "ordering": "NM",
+    "nsites": 1,
+    "volume": 18.258066615716924,
+    "theoretical": false,
+    "crystalSystem": "Cubic",
+    "spacegroup": "Im-3m"
   },
   {
     "id": "aluminium",
@@ -76,8 +94,17 @@
     "density": 2.720050209019067,
     "bandGap": 0.0,
     "isMetal": true,
+    "isGapDirect": false,
+    "isStable": true,
     "eAboveHull": 0.0,
-    "crystalSystem": "Cubic"
+    "formationEnergy": 0.0,
+    "totalMagnetization": 0.0,
+    "ordering": "NM",
+    "nsites": 1,
+    "volume": 16.471717630914863,
+    "theoretical": false,
+    "crystalSystem": "Cubic",
+    "spacegroup": "Fm-3m"
   },
   {
     "id": "tin",
@@ -101,8 +128,17 @@
     "density": 5.386845377479396,
     "bandGap": 0.0,
     "isMetal": true,
+    "isGapDirect": false,
+    "isStable": true,
     "eAboveHull": 0.0,
-    "crystalSystem": "Cubic"
+    "formationEnergy": -1.9426672827083311,
+    "totalMagnetization": 4e-07,
+    "ordering": "NM",
+    "nsites": 2,
+    "volume": 19.073073170918462,
+    "theoretical": false,
+    "crystalSystem": "Cubic",
+    "spacegroup": "Fm-3m"
   },
   {
     "id": "nbn",
@@ -122,8 +158,17 @@
     "density": 8.003657776241376,
     "bandGap": 0.0,
     "isMetal": true,
+    "isGapDirect": false,
+    "isStable": true,
     "eAboveHull": 0.0,
-    "crystalSystem": "Hexagonal"
+    "formationEnergy": -1.246791244375,
+    "totalMagnetization": 0.0,
+    "ordering": "NM",
+    "nsites": 2,
+    "volume": 22.1815263762943,
+    "theoretical": false,
+    "crystalSystem": "Hexagonal",
+    "spacegroup": "P-6m2"
   },
   {
     "id": "granular-al",
@@ -142,8 +187,17 @@
     "density": 2.720050209019067,
     "bandGap": 0.0,
     "isMetal": true,
+    "isGapDirect": false,
+    "isStable": true,
     "eAboveHull": 0.0,
-    "crystalSystem": "Cubic"
+    "formationEnergy": 0.0,
+    "totalMagnetization": 0.0,
+    "ordering": "NM",
+    "nsites": 1,
+    "volume": 16.471717630914863,
+    "theoretical": false,
+    "crystalSystem": "Cubic",
+    "spacegroup": "Fm-3m"
   },
   {
     "id": "nbtin",
@@ -163,8 +217,17 @@
     "density": null,
     "bandGap": null,
     "isMetal": null,
+    "isGapDirect": null,
+    "isStable": null,
     "eAboveHull": null,
-    "crystalSystem": null
+    "formationEnergy": null,
+    "totalMagnetization": null,
+    "ordering": null,
+    "nsites": null,
+    "volume": null,
+    "theoretical": null,
+    "crystalSystem": null,
+    "spacegroup": null
   },
   {
     "id": "indium",
@@ -191,8 +254,17 @@
     "density": 7.22400940173368,
     "bandGap": 0.0,
     "isMetal": true,
+    "isGapDirect": false,
+    "isStable": true,
     "eAboveHull": 0.0,
-    "crystalSystem": "Cubic"
+    "formationEnergy": 0.0,
+    "totalMagnetization": 0.0,
+    "ordering": "NM",
+    "nsites": 1,
+    "volume": 26.392514730548744,
+    "theoretical": false,
+    "crystalSystem": "Cubic",
+    "spacegroup": "Fm-3m"
   },
   {
     "id": "tin-metal",
@@ -213,8 +285,17 @@
     "density": 5.560776472065438,
     "bandGap": 0.0,
     "isMetal": true,
+    "isGapDirect": false,
+    "isStable": true,
     "eAboveHull": 0.0,
-    "crystalSystem": "Cubic"
+    "formationEnergy": 0.0,
+    "totalMagnetization": 0.0,
+    "ordering": "NM",
+    "nsites": 2,
+    "volume": 70.8975063415447,
+    "theoretical": false,
+    "crystalSystem": "Cubic",
+    "spacegroup": "Fd-3m"
   },
   {
     "id": "sapphire",
@@ -241,8 +322,17 @@
     "density": 3.123375493505625,
     "bandGap": 4.084,
     "isMetal": false,
+    "isGapDirect": false,
+    "isStable": false,
     "eAboveHull": 0.16854959930000002,
-    "crystalSystem": "Triclinic"
+    "formationEnergy": -3.258001408699999,
+    "totalMagnetization": 0.009032499999999001,
+    "ordering": "NM",
+    "nsites": 100,
+    "volume": 1084.151967380332,
+    "theoretical": true,
+    "crystalSystem": "Triclinic",
+    "spacegroup": "P1"
   },
   {
     "id": "silicon",
@@ -269,8 +359,17 @@
     "density": 2.231027796342244,
     "bandGap": 0.2735,
     "isMetal": false,
+    "isGapDirect": false,
+    "isStable": false,
     "eAboveHull": 0.08220610625000001,
-    "crystalSystem": "Monoclinic"
+    "formationEnergy": 0.08220610625000001,
+    "totalMagnetization": 0.0,
+    "ordering": "NM",
+    "nsites": 8,
+    "volume": 167.23079840226276,
+    "theoretical": true,
+    "crystalSystem": "Monoclinic",
+    "spacegroup": "C2/m"
   },
   {
     "id": "mgo",
@@ -297,8 +396,17 @@
     "density": 3.628903381952319,
     "bandGap": 4.4292,
     "isMetal": false,
+    "isGapDirect": true,
+    "isStable": true,
     "eAboveHull": 0.0,
-    "crystalSystem": "Cubic"
+    "formationEnergy": -3.03830917,
+    "totalMagnetization": 0.0,
+    "ordering": "NM",
+    "nsites": 2,
+    "volume": 18.4427700910204,
+    "theoretical": false,
+    "crystalSystem": "Cubic",
+    "spacegroup": "Fm-3m"
   },
   {
     "id": "alox",
@@ -325,8 +433,17 @@
     "density": 3.123375493505625,
     "bandGap": 4.084,
     "isMetal": false,
+    "isGapDirect": false,
+    "isStable": false,
     "eAboveHull": 0.16854959930000002,
-    "crystalSystem": "Triclinic"
+    "formationEnergy": -3.258001408699999,
+    "totalMagnetization": 0.009032499999999001,
+    "ordering": "NM",
+    "nsites": 100,
+    "volume": 1084.151967380332,
+    "theoretical": true,
+    "crystalSystem": "Triclinic",
+    "spacegroup": "P1"
   },
   {
     "id": "nb2o5",
@@ -351,8 +468,17 @@
     "density": 4.300420662212256,
     "bandGap": 1.7731,
     "isMetal": false,
+    "isGapDirect": false,
+    "isStable": true,
     "eAboveHull": 0.0,
-    "crystalSystem": "Monoclinic"
+    "formationEnergy": -3.034205274693879,
+    "totalMagnetization": 0.0422385,
+    "ordering": "NM",
+    "nsites": 98,
+    "volume": 1436.934978242596,
+    "theoretical": false,
+    "crystalSystem": "Monoclinic",
+    "spacegroup": "P2"
   },
   {
     "id": "nbo",
@@ -377,8 +503,17 @@
     "density": 7.068081569952337,
     "bandGap": 0.0,
     "isMetal": true,
+    "isGapDirect": false,
+    "isStable": true,
     "eAboveHull": 0.0,
-    "crystalSystem": "Cubic"
+    "formationEnergy": -2.287660930833333,
+    "totalMagnetization": 0.0,
+    "ordering": "NM",
+    "nsites": 6,
+    "volume": 76.75730697732924,
+    "theoretical": false,
+    "crystalSystem": "Cubic",
+    "spacegroup": "Pm-3m"
   },
   {
     "id": "ta2o5",
@@ -400,8 +535,17 @@
     "density": 8.7289892060389,
     "bandGap": 1.2267000000000001,
     "isMetal": false,
+    "isGapDirect": false,
+    "isStable": true,
     "eAboveHull": 0.0,
-    "crystalSystem": "Monoclinic"
+    "formationEnergy": -3.346563131380951,
+    "totalMagnetization": 0.0,
+    "ordering": "NM",
+    "nsites": 14,
+    "volume": 168.1248937093548,
+    "theoretical": false,
+    "crystalSystem": "Monoclinic",
+    "spacegroup": "C2/c"
   },
   {
     "id": "sio2",
@@ -428,8 +572,17 @@
     "density": 2.254998357567127,
     "bandGap": 5.5868,
     "isMetal": false,
+    "isGapDirect": false,
+    "isStable": false,
     "eAboveHull": 0.006573497500003,
-    "crystalSystem": "Triclinic"
+    "formationEnergy": -3.266257846388887,
+    "totalMagnetization": 0.0,
+    "ordering": "NM",
+    "nsites": 72,
+    "volume": 1061.8792044143463,
+    "theoretical": false,
+    "crystalSystem": "Triclinic",
+    "spacegroup": "P1"
   },
   {
     "id": "hbn",
@@ -452,7 +605,16 @@
     "density": 2.246711413298581,
     "bandGap": 4.3683,
     "isMetal": false,
+    "isGapDirect": false,
+    "isStable": true,
     "eAboveHull": 0.0,
-    "crystalSystem": "Hexagonal"
+    "formationEnergy": -1.412978993125001,
+    "totalMagnetization": 0.0,
+    "ordering": "NM",
+    "nsites": 4,
+    "volume": 36.68540618899864,
+    "theoretical": true,
+    "crystalSystem": "Hexagonal",
+    "spacegroup": "P-6m2"
   }
 ]
