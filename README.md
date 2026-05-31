@@ -6,7 +6,7 @@
 
 ## What is ArQiteQ?
 
-ArQiteQ is an AI agent that bridges the gap between **quantum materials science** and **quantum error correction (QEC) theory**. Given a physicist's hardware constraints—qubit type, control electronics, cryogenics, and target performance—Q-ArQite recommends the optimal error-correcting code and simulates its performance on that specific material stack.
+ArQiteQ is an AI agent that bridges the gap between **quantum materials science** and **quantum error correction (QEC) theory**. Given a physicist's hardware constraints—qubit type, control electronics, cryogenics, and target performance— ArQiteQ recommends the optimal error-correcting code and simulates its performance on that specific material stack.
 
 The core insight: **materials and codes have a many-to-many relationship**, and the best match depends on tradeoffs between error suppression, hardware overhead, and computational cost.
 
