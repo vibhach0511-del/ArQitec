@@ -12,6 +12,7 @@
 // from qubit_catalogue.py / control_hardware_catalogue.py / target.py).
 
 import { MATERIALS, type QubitMaterial } from "./materials-data";
+import { CRYOSTATS, type Cryostat } from "./cryostat-data";
 
 // ---------------------------------------------------------------- data
 
@@ -85,12 +86,10 @@ export const CONTROL_HARDWARE: ControlHardware[] = [
 const CONTROL_CATEGORIES: ControlCategory[] = [
   "room-temp-controller", "cryogenic-controller", "ion-trap-controller", "photonic-controller",
 ];
-const CRYO_CATEGORIES: ControlCategory[] = [
-  "dilution-refrigerator", "parametric-amplifier", "hemt-amplifier",
-];
 
 export const CONTROL_OPTIONS = CONTROL_HARDWARE.filter((h) => CONTROL_CATEGORIES.includes(h.category));
-export const CRYO_OPTIONS = CONTROL_HARDWARE.filter((h) => CRYO_CATEGORIES.includes(h.category));
+// Step 3 cryostats come from cryostat_catalog.py (Tier-1 dilution refrigerators).
+export const CRYO_OPTIONS = CRYOSTATS;
 
 export interface CodesignTarget {
   id: string;
@@ -345,10 +344,10 @@ export interface HardwareConstraints {
   realTimeDecoding: boolean;
 }
 
-export function deriveConstraints(control: ControlHardware, cryo: ControlHardware): HardwareConstraints {
+export function deriveConstraints(control: ControlHardware, cryo: Cryostat): HardwareConstraints {
   const gateTimeFloorNs = GATE_TIME_FLOOR_NS[control.id] ?? 50;
   const measurementLatencyNs = control.latencyFeedbackNs ?? 1000;
-  const thermalFloorK = cryo.operatingTempK;
+  const thermalFloorK = cryo.operatingTempMK / 1000;
   // mK base stage is fine; warmer stages add thermal photons -> error penalty.
   const thermalPenalty = Math.max(0, (thermalFloorK - 0.02) * 2.5);
   // A syndrome cycle ≈ a few 2Q gates + readout latency.
@@ -534,7 +533,7 @@ export interface WorkflowResult {
 export function runWorkflow(
   node: QubitTypeNode,
   control: ControlHardware,
-  cryo: ControlHardware,
+  cryo: Cryostat,
   target: CodesignTarget,
   maxPhysical: number,
 ): WorkflowResult {
@@ -542,7 +541,9 @@ export function runWorkflow(
   const materials = materialsForNode(node);
   const platform = platformForNode(node);
   const controlOk = hardwareSupportsPlatform(control, platform);
-  const cryoOk = hardwareSupportsPlatform(cryo, platform);
+  // Every Tier-1 dilution refrigerator hosts superconducting chips; compatibility
+  // is a matter of base temperature / cabling, surfaced as caveats below.
+  const cryoOk = true;
   const qec = needsQEC(target);
   const decodeOk = !qec || control.realTimeDecoding;
 
@@ -560,10 +561,11 @@ export function runWorkflow(
 
   const caveats: string[] = [];
   if (!controlOk) caveats.push(`${control.name} does not list support for ${node.label} (${platform}) qubits`);
-  if (!cryoOk) caveats.push(`${cryo.name} is not rated for ${node.label} (${platform}) qubits`);
+  if (maxPhysical > cryo.maxQubits) caveats.push(`${cryo.name} caps at ~${cryo.maxQubits} qubits (multiplexed readout); the ${maxPhysical}-qubit budget needs a larger fridge or chiplet tiling`);
+  if (cryo.baseTempMK > 12 && node.family === "flux") caveats.push(`${cryo.name} base temp (${cryo.baseTempMK} mK) is warm for low-frequency flux qubits — expect higher thermal population`);
   if (!decodeOk) caveats.push(`${control.name} has no real-time decoder, required for QEC`);
   if (constraints.thermalPenalty > 0.1) caveats.push(`Cold stage at ${(constraints.thermalFloorK * 1000).toFixed(0)} mK adds a ${(constraints.thermalPenalty * 100).toFixed(0)}% thermal error penalty`);
-  caveats.push("Material noise (T1/T2, gate error) is curated from the literature; Materials Project supplies the crystallographic / electronic properties. Logical-error numbers are analytic surface-code estimates (PanQEC + Stim is the backend upgrade).");
+  caveats.push("Quantum material properties (T1/T2, bias \u03b7, gate fidelity) come from material_properties.py; cryostat specs from cryostat_catalog.py; Materials Project supplies the crystallography. Logical-error numbers are analytic surface-code estimates (PanQEC + Stim is the backend upgrade).");
 
   const compatIssue = !controlOk || !cryoOk || !decodeOk;
   const feasibleWithin = pairs.find((p) => p.feasible && p.withinBudget) ?? null;

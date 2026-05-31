@@ -25,6 +25,61 @@ import time
 
 import requests
 
+try:
+    from material_properties import ALL_PROPERTIES  # vibha 7-tier quantum properties
+except Exception:  # noqa: BLE001
+    ALL_PROPERTIES = {}
+
+# Per-material override match into material_properties.py: (mp role, keywords, excludes).
+QPROPS_MATCH = {
+    "tantalum": ("film", ["tantalum"], ["nitride", "β", "beta", "amorphous"]),
+    "niobium": ("film", ["niobium"], ["nitride", "titanium", "germanium", "-tin", "alloy"]),
+    "aluminium": ("film", ["aluminum"], ["oxide", "granular", "inas", "2deg", "epitaxial"]),
+    "tin": ("film", ["titanium nitride"], ["disordered", "vanadium"]),
+    "nbn": ("film", ["niobium nitride"], ["disordered"]),
+    "granular-al": ("film", ["granular aluminum"], []),
+    "nbtin": ("film", ["niobium titanium nitride"], []),
+    "indium": ("film", ["indium"], ["oxide"]),
+    "tin-metal": ("film", ["tin"], ["nitride", "telluride", "niobium", "disordered"]),
+    "sapphire": ("substrate", ["sapphire"], ["composite"]),
+    "silicon": ("substrate", ["silicon ("], ["insulator", "-28", "enriched"]),
+    "mgo": ("substrate", ["magnesium oxide"], []),
+    "alox": ("junction", ["al-alox-al"], []),
+    "sio2": ("substrate", ["fused silica", "silicon dioxide", "quartz"], []),
+    "hbn": ("dielectric", ["boron nitride"], []),
+}
+
+
+def apply_qprops_override(rec: dict) -> None:
+    """Override T1/T2/bias/gate fidelity from material_properties.py where matched."""
+    rec["qpropsSource"] = None
+    rec["qpropsConfidence"] = None
+    rec["qpropsRefs"] = None
+    spec = QPROPS_MATCH.get(rec["id"])
+    if not spec or not ALL_PROPERTIES:
+        return
+    role, kws, excl = spec
+    cands = [
+        p for p in ALL_PROPERTIES.values()
+        if getattr(p, "role", None) == role
+        and any(k in p.display_name.lower() for k in kws)
+        and not any(x in p.display_name.lower() for x in excl)
+    ]
+    if not cands:
+        return
+    best = max(cands, key=lambda p: (getattr(p, "gate_2q_fidelity", None) or 0) * 1000 + (getattr(p, "T1_us", None) or 0))
+    if getattr(best, "gate_2q_fidelity", None) is not None:
+        rec["pGate2q"] = round(1 - best.gate_2q_fidelity, 5)
+    if getattr(best, "bias_eta", None) is not None:
+        rec["biasEta"] = best.bias_eta
+    if getattr(best, "T1_us", None) is not None:
+        rec["t1Us"] = best.T1_us
+    if getattr(best, "T2_echo_us", None) is not None:
+        rec["t2Us"] = best.T2_echo_us
+    rec["qpropsSource"] = best.display_name
+    rec["qpropsConfidence"] = getattr(best, "confidence", None)
+    rec["qpropsRefs"] = len(getattr(best, "references", None) or [])
+
 ROOT = os.path.dirname(os.path.dirname(__file__))
 OUT_TS = os.path.join(ROOT, "src", "lib", "qa", "materials-data.ts")
 OUT_JSON = os.path.join(os.path.dirname(__file__), "outputs", "materials_project.json")
@@ -166,7 +221,7 @@ def export_ts(records: list[dict]):
               "t1Us", "t2Us", "mpId", "density", "bandGap", "isMetal", "isGapDirect",
               "isStable", "eAboveHull", "formationEnergy", "totalMagnetization",
               "ordering", "nsites", "volume", "theoretical", "crystalSystem",
-              "spacegroup", "note"]
+              "spacegroup", "qpropsSource", "qpropsConfidence", "qpropsRefs", "note"]
     rows = []
     for r in records:
         parts = ", ".join(f"{f}: {ts_value(r.get(f))}" for f in fields)
@@ -187,6 +242,7 @@ export interface QubitMaterial {{
   totalMagnetization: number | null; ordering: string | null;
   nsites: number | null; volume: number | null; theoretical: boolean | null;
   crystalSystem: string | null; spacegroup: string | null;
+  qpropsSource: string | null; qpropsConfidence: string | null; qpropsRefs: number | null;
   note: string;
 }}
 
@@ -226,8 +282,10 @@ def main():
             "nsites": None, "volume": None, "theoretical": None,
             "crystalSystem": None, "spacegroup": None,
         })
+        apply_qprops_override(rec)
         tag = rec["mpId"] or "no-mp-match"
-        print(f"  {m['name']:<34} {m['formula']:<7} -> {tag}")
+        qsrc = f" · qprops: {rec['qpropsSource']} ({rec['qpropsConfidence']})" if rec.get("qpropsSource") else ""
+        print(f"  {m['name']:<34} {m['formula']:<7} -> {tag}{qsrc}")
         records.append(rec)
         time.sleep(0.05)
 

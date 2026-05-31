@@ -16,9 +16,9 @@ import {
   needsQEC,
   qubitNodeById,
   runWorkflow,
-  type ControlHardware,
 } from "@/lib/qa/codesign";
 import { MATERIALS_META } from "@/lib/qa/materials-data";
+import { groundPlaneScore } from "@/lib/qa/ground-plane";
 
 export const Route = createFileRoute("/_app/codesign")({
   head: () => ({ meta: [{ title: "Co-Design Selector — Q-Architect" }, { name: "description", content: "Input → hardware constraints → material library → QEC matching → best material + code." }] }),
@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_app/codesign")({
 });
 
 const FAMILY_ACCENT: Record<string, string> = { violet: "text-violet", green: "text-neon-green", amber: "text-amber", cyan: "text-cyan" };
-const byId = (list: ControlHardware[], id: string) => list.find((h) => h.id === id) ?? list[0];
+const byId = <T extends { id: string }>(list: T[], id: string): T => list.find((h) => h.id === id) ?? list[0];
 
 const BUDGETS = [
   { label: "50", value: 50 }, { label: "100", value: 100 }, { label: "150", value: 150 },
@@ -50,7 +50,7 @@ function fmtTime(s: number | null): string {
 function CodesignPage() {
   const [qubitNodeId, setQubitNodeId] = useState("transmon");
   const [controlId, setControlId] = useState(CONTROL_OPTIONS[0].id);
-  const [cryoId, setCryoId] = useState(CRYO_OPTIONS.find((c) => c.category === "dilution-refrigerator")?.id ?? CRYO_OPTIONS[0].id);
+  const [cryoId, setCryoId] = useState(CRYO_OPTIONS[0].id);
   const [targetId, setTargetId] = useState("memory-demo");
   const [maxPhysical, setMaxPhysical] = useState(200);
 
@@ -113,7 +113,7 @@ function CodesignPage() {
         <StepPanel n={3} title="Cryostat" icon={<Snowflake className="h-3.5 w-3.5 text-neon-blue" />}>
           {CRYO_OPTIONS.map((c) => (
             <Chip key={c.id} active={cryoId === c.id} onClick={() => setCryoId(c.id)}
-              title={c.name} sub={`${c.vendor} · ${c.operatingTempK < 1 ? `${(c.operatingTempK * 1000).toFixed(0)} mK` : `${c.operatingTempK} K`}`} />
+              title={c.name} sub={`${c.manufacturer.split(" ")[0]} · ${c.baseTempMK} mK · ${c.maxQubits}q`} />
           ))}
         </StepPanel>
         <StepPanel n={4} title="Target · logical error" icon={<TargetIcon className="h-3.5 w-3.5 text-amber" />}>
@@ -158,6 +158,7 @@ function CodesignPage() {
                 <tr className="border-b border-border/60">
                   <th className="text-left px-4 py-2.5">#</th>
                   <th className="text-left px-4 py-2.5">Material</th>
+                  <th className="text-left px-4 py-2.5">GP / Resonator</th>
                   <th className="text-left px-4 py-2.5">Role · MP</th>
                   <th className="text-left px-4 py-2.5">Code</th>
                   <th className="text-right px-4 py-2.5">d</th>
@@ -172,12 +173,14 @@ function CodesignPage() {
                   <tr key={`${p.material.id}-${p.code.id}`} className={cn("border-b border-border/40 last:border-0 hover:bg-surface-2/40", !p.feasible && "opacity-55")}>
                     <td className="px-4 py-2.5 mono text-muted-foreground">{i + 1}</td>
                     <td className="px-4 py-2.5 text-foreground">{p.material.name}</td>
+                    <td className="px-4 py-2.5"><GroundPlaneCell materialId={p.material.id} /></td>
                     <td className="px-4 py-2.5 text-[11px] text-muted-foreground">
                       {p.material.role}
                       {p.material.mpId && <span className="mono text-cyan"> · {p.material.mpId}</span>}
                       {p.material.crystalSystem && <span> · {p.material.crystalSystem}</span>}
                       {p.material.isStable && <span className="text-neon-green"> · stable</span>}
                       {p.material.ordering && p.material.ordering !== "NM" && <span className="text-danger"> · {p.material.ordering} magnetic</span>}
+                      {p.material.qpropsConfidence && <span className="text-violet"> · T1/T2 {p.material.qpropsConfidence}</span>}
                     </td>
                     <td className="px-4 py-2.5 text-violet mono text-xs">{p.code.name}</td>
                     <td className="px-4 py-2.5 text-right mono">{p.distance !== null ? p.distance.toFixed(1) : "—"}</td>
@@ -243,7 +246,8 @@ function CodesignPage() {
               {output.best.material.isMetal !== null && <span className="rounded border border-border/60 bg-surface-2/50 px-1.5 py-0.5">{output.best.material.isMetal ? "metal" : `gap ${output.best.material.bandGap?.toFixed(1)} eV`}</span>}
               {output.best.material.isStable !== null && <span className="rounded border border-border/60 bg-surface-2/50 px-1.5 py-0.5">{output.best.material.isStable ? "stable (on hull)" : "metastable"}</span>}
               {output.best.material.ordering && <span className="rounded border border-border/60 bg-surface-2/50 px-1.5 py-0.5">{output.best.material.ordering}</span>}
-              <span className="text-muted-foreground/70">via Materials Project</span>
+              {output.best.material.qpropsSource && <span className="rounded border border-violet/40 bg-violet/10 px-1.5 py-0.5 text-violet">T1/T2 ← {output.best.material.qpropsSource} ({output.best.material.qpropsConfidence})</span>}
+              <span className="text-muted-foreground/70">crystallography via Materials Project · quantum props via material_properties.py</span>
             </div>
           </Panel>
         )}
@@ -342,6 +346,38 @@ function CodesignPage() {
           )}
         </Panel>
       </div>
+    </div>
+  );
+}
+
+const GP_TONE: Record<string, { bar: string; text: string }> = {
+  high: { bar: "bg-neon-green", text: "text-neon-green" },
+  medium: { bar: "bg-amber", text: "text-amber" },
+  low: { bar: "bg-danger", text: "text-danger" },
+  reject: { bar: "bg-danger", text: "text-danger" },
+  "n/a": { bar: "bg-surface-3", text: "text-muted-foreground/60" },
+};
+
+function GroundPlaneCell({ materialId }: { materialId: string }) {
+  const gp = groundPlaneScore(materialId);
+  const tone = GP_TONE[gp.label];
+  if (!gp.applicable) {
+    return <span className="mono text-[10px] text-muted-foreground/60" title={gp.rejectedReason ?? ""}>n/a</span>;
+  }
+  const top = [...gp.contributions].sort((a, b) => b.weight * b.sub - a.weight * a.sub).slice(0, 3)
+    .map((c) => `${c.label} ${(c.sub * 100).toFixed(0)}%`).join(" · ");
+  const tip = gp.rejectedReason
+    ? `REJECT — ${gp.rejectedReason}`
+    : `${gp.note}\nFilm-limited T1 ceiling ≈ ${gp.t1CeilingUs} µs\nTop drivers: ${top}`;
+  return (
+    <div className="flex items-center gap-1.5" title={tip}>
+      <div className="h-1 w-12 rounded-full bg-surface-3/80 overflow-hidden">
+        <div className={cn("h-full rounded-full", tone.bar)} style={{ width: `${gp.label === "reject" ? 100 : gp.score}%` }} />
+      </div>
+      <span className={cn("mono text-[10px] tabular-nums", tone.text)}>
+        {gp.label === "reject" ? "reject" : `${gp.score}%`}
+      </span>
+      <span className={cn("mono text-[9px] uppercase tracking-wide", tone.text)}>{gp.label === "reject" ? "" : gp.label}</span>
     </div>
   );
 }
