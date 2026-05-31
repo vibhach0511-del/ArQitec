@@ -36,3 +36,22 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Virtual environment
+lib/
+bin/
+include/
+pyvenv.cfg
+share/
+etc/
+
+# Cloned external repos
+eczoo_data/
+ScaLERQEC/
+qECCBenchWiki/
+
+# Notebooks and misc
+.ipynb_checkpoints/
+Untitled.ipynb
+readme_example_plot.png
+client.log
