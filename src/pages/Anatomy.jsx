@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
 
-// Five functional layers of a superconducting qubit, top-of-chip → wafer.
-// Layer 3 is the Josephson junction itself — the Al-AlOₓ-Al sandwich, treated
-// as one functional layer. That's the layer the engine designs.
+// Seven-layer superconducting qubit stack. Top-of-chip → wafer.
+// Material + thickness from the standard Al-junction / Nb-interconnect process.
+// `property` captures the EM job each layer does + the material property
+// that dominates the noise model for that role.
 const LAYERS = [
   {
-    n: '05',
+    n: '07',
     id: 'top-wiring',
     label: 'Top wiring / shielding',
     material: 'Superconductor',
@@ -16,7 +17,7 @@ const LAYERS = [
     family: 'sc-metal',
   },
   {
-    n: '04',
+    n: '06',
     id: 'interconnect',
     label: 'Interconnect / wiring',
     material: 'Al or Nb',
@@ -25,13 +26,31 @@ const LAYERS = [
     family: 'sc-metal',
   },
   {
-    n: '03',
-    id: 'josephson-junction',
-    label: 'Josephson junction',
-    material: 'Al · AlOₓ · Al sandwich',
-    thickness: '~50 nm total (1–2 nm barrier)',
-    property: 'Three nanoscale films — Al base, AlOₓ tunnel barrier, Al top — whose composition sets the qubit frequency, fidelity, and bias. The layer ArQitec designs.',
+    n: '05',
+    id: 'jj-top',
+    label: 'JJ top electrode',
+    material: 'Aluminum (Al)',
+    thickness: '20–30 nm',
+    property: 'Other side of the Josephson junction; same purity demands as the base.',
+    family: 'junction',
+  },
+  {
+    n: '04',
+    id: 'tunnel-barrier',
+    label: 'Tunnel barrier',
+    material: 'Aluminum oxide (AlOₓ)',
+    thickness: '1–2 nm',
+    property: 'The Josephson junction itself. Sub-nm thickness uniformity sets the qubit frequency.',
     family: 'junction-core',
+  },
+  {
+    n: '03',
+    id: 'jj-base',
+    label: 'JJ base electrode',
+    material: 'Aluminum (Al)',
+    thickness: '20–30 nm',
+    property: 'Cooper pairs in. Clean superconductor with a well-behaved native oxide.',
+    family: 'junction',
   },
   {
     n: '02',
@@ -77,9 +96,9 @@ export default function Anatomy() {
   const PLATE_LEFT = VBW / 2 - PLATE_W / 2 - 40;
   const SKEW_X = 38;
   const SKEW_Y = -12;
-  const STACK_TOP = 90;
-  const LAYER_GAP = 90;
-  const LAYER_HEIGHT = 48;
+  const STACK_TOP = 80;
+  const LAYER_GAP = 60;
+  const LAYER_HEIGHT = 38;
 
   return (
     <div className="min-h-screen bg-background">
@@ -101,12 +120,13 @@ export default function Anatomy() {
               </span>
             </div>
             <h1 className="font-display text-4xl md:text-5xl font-bold leading-[1.05]">
-              Five layers stand between silicon
+              Seven layers between silicon
               <br />
               <span className="gradient-text">and a working qubit.</span>
             </h1>
             <p className="font-body text-muted-foreground mt-6 leading-relaxed">
-              Four of them get picked from a catalogue. <span className="text-foreground font-medium">Layer 3 — the Josephson junction</span> — is where every iteration happens.
+              Each layer fights a different noise channel. Pick the wrong material at any
+              one of them and your error budget is gone.
             </p>
           </motion.div>
 
@@ -149,7 +169,7 @@ export default function Anatomy() {
                     const colors = FAMILY_COLOR[layer.family];
                     const isHov = hovered === layer.id;
                     const isDim = hovered !== null && !isHov;
-                    const lift = (i - 2) * 5; // mild fan around the Josephson junction (index 2)
+                    const lift = (i - 3) * 4; // mild fan around the tunnel barrier (index 3)
 
                     const left = PLATE_LEFT;
                     const right = PLATE_LEFT + PLATE_W;
@@ -217,13 +237,14 @@ export default function Anatomy() {
                 </svg>
 
                 <div className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground text-center mt-4">
+                  <span style={{ color: 'rgba(214,220,228,0.95)' }}>silver</span> = SC metal · {' '}
+                  <span style={{ color: 'hsl(191, 97%, 55%)' }}>cyan</span> = JJ electrodes · {' '}
                   <span style={{
                     background: 'linear-gradient(90deg, #ff8ad3, #a78bfa, #7dd3fc, #86efac, #fcd34d)',
                     WebkitBackgroundClip: 'text',
                     backgroundClip: 'text',
                     color: 'transparent',
-                  }}>iridescent</span> = layer 3 (Josephson junction) · {' '}
-                  <span style={{ color: 'rgba(214,220,228,0.95)' }}>silver</span> = SC metal · {' '}
+                  }}>iridescent</span> = AlOₓ barrier · {' '}
                   <span style={{ color: 'rgba(180,195,220,0.85)' }}>slate</span> = substrate
                 </div>
               </div>
@@ -283,21 +304,25 @@ export default function Anatomy() {
             </div>
           </div>
 
-          {/* The takeaway — Layer 3 is the Josephson junction, the only layer the engine designs */}
+          {/* The takeaway — layers 03–05 are the Josephson junction, layer 04 is its core */}
           <div className="mt-16 glass rounded-2xl p-8 border-primary/20">
             <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-primary mb-3">
               what arqitec does with this stack
             </div>
             <div className="font-display text-2xl font-bold text-foreground max-w-3xl">
-              The whole engine designs <span className="gradient-text">Layer 3 — the Josephson junction</span>. Every iteration, every sample, every recipe parameter is about this one layer.
+              The whole engine designs the <span className="gradient-text">Josephson junction</span> — layers 03, 04, and 05 — where the qubit's frequency, fidelity, and bias are decided.
             </div>
             <p className="font-body text-muted-foreground mt-4 leading-relaxed max-w-3xl">
-              The other four layers are chosen from a catalogue. Layer 3 is the Al-AlOₓ-Al
-              sandwich whose composition decides the qubit's frequency, fidelity, and bias —
-              the only place where sub-nm thickness uniformity, doping placement, and
-              deposition parameters compound into the noise budget your QEC code has to live
-              inside.
+              The other four layers are mostly chosen from a catalogue. The junction sandwich —
+              base electrode, tunnel barrier, top electrode — is where sub-nm thickness
+              uniformity, doping placement, and deposition parameters compound into the noise
+              budget your QEC code has to live inside.
             </p>
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <JJTile n="03" label="JJ base electrode"  detail="Cooper pairs in · clean Al, well-behaved native oxide" />
+              <JJTile n="04" label="Tunnel barrier"     detail="The Josephson junction itself · 1–2 nm AlOₓ" highlight />
+              <JJTile n="05" label="JJ top electrode"   detail="Other side of the junction · same purity demands" />
+            </div>
           </div>
         </div>
       </div>
@@ -305,3 +330,24 @@ export default function Anatomy() {
   );
 }
 
+function JJTile({ n, label, detail, highlight = false }) {
+  return (
+    <div
+      className={`rounded-xl px-4 py-3 border ${
+        highlight
+          ? 'border-primary/50 bg-primary/[0.07]'
+          : 'border-border/50 bg-background/40'
+      }`}
+    >
+      <div className="flex items-baseline gap-2">
+        <span className={`font-mono text-[11px] tracking-[0.22em] ${highlight ? 'text-primary' : 'text-muted-foreground'}`}>
+          {n}
+        </span>
+        <span className="font-display text-sm font-semibold text-foreground">{label}</span>
+      </div>
+      <div className="font-mono text-[11px] text-muted-foreground mt-1.5 leading-snug">
+        {detail}
+      </div>
+    </div>
+  );
+}
