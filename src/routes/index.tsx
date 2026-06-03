@@ -1,154 +1,124 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Link } from "@tanstack/react-router";
-import { ArrowRight, Network, ShieldCheck, FlaskConical, CircuitBoard, Sparkles } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowRight } from "lucide-react";
+import { HeroLattice } from "@/components/hero-lattice";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "ArQiteQ — QEC Recommendation Engine" },
-      { name: "description", content: "QEC recommendation engine for superconducting quantum chips. Recommends optimal error-correction codes and ranks material stacks from noise profile to fabrication targets." },
-      { property: "og:title", content: "ArQiteQ — QEC Recommendation Engine" },
-      { property: "og:description", content: "Given a material noise profile, ArQiteQ recommends the optimal QEC code and ranks Layer 2 material stacks across thousands of combinations." },
+      { title: "ArQitec — design chips to a QEC target" },
+      {
+        name: "description",
+        content:
+          "Pick a target QEC code. Get a doping pattern, predicted T1 / T2 / η, and a fabrication recipe.",
+      },
     ],
   }),
-  component: Index,
+  component: LandingPage,
 });
 
-function Index() {
+function LandingPage() {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
-      <BackgroundLattice />
-      <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-        <div className="flex items-center gap-2">
-          <div className="relative flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-br from-cyan/30 to-violet/30 border border-cyan/40 qa-glow-cyan">
-            <CircuitBoard className="h-4 w-4 text-cyan" />
-          </div>
-          <div className="leading-none">
-            <div className="text-sm font-semibold tracking-tight">ArQiteQ</div>
-            <div className="mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">QEC recommendation engine</div>
-          </div>
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="border-b border-border/60">
+        <div className="mx-auto max-w-6xl flex items-center justify-between h-14 px-6">
+          <Link to="/" className="flex items-baseline gap-2">
+            <span className="h-syne text-base font-semibold">ArQitec</span>
+            <span className="text-[10px] mono uppercase tracking-[0.18em] text-muted-foreground">
+              v2
+            </span>
+          </Link>
+          <nav className="flex items-center gap-7 text-sm">
+            <Link to="/" className="text-foreground">Home</Link>
+            <Link to="/design" className="text-muted-foreground hover:text-foreground transition">Design</Link>
+            <Link to="/why" className="text-muted-foreground hover:text-foreground transition">Why</Link>
+          </nav>
         </div>
-        <nav className="hidden md:flex items-center gap-6 mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-          <a className="hover:text-foreground transition" href="#mission">Mission</a>
-          <a className="hover:text-foreground transition" href="#capabilities">Capabilities</a>
-          <a className="hover:text-foreground transition" href="#stack">Stack</a>
-        </nav>
-        <Link to="/workspace" className="inline-flex items-center gap-1.5 rounded-md bg-cyan px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-cyan/90 transition">
-          Open Workspace <ArrowRight className="h-3.5 w-3.5" />
-        </Link>
       </header>
 
-      <section id="mission" className="relative z-10 mx-auto max-w-7xl px-6 pt-16 pb-24">
-        <div className="mono text-[10px] uppercase tracking-[0.3em] text-cyan mb-5">
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-1 w-1 rounded-full bg-cyan animate-pulse" />
-            arqiteq · hackathon 2026 · superconducting QEC
-          </span>
-        </div>
-        <h1 className="text-5xl md:text-7xl font-semibold tracking-tight leading-[1.02] max-w-5xl">
-          QEC codes matched to <br />
-          <span className="bg-gradient-to-r from-cyan via-neon-blue to-violet bg-clip-text text-transparent">
-            your material stack
-          </span>
-        </h1>
-        <p className="mt-6 max-w-2xl text-base text-muted-foreground leading-relaxed">
-          ArQiteQ is a QEC recommendation engine for superconducting quantum chips, built at Hackathon 2026. Given a material&apos;s noise profile — bias ratio and two-qubit gate error rate — it recommends the optimal quantum error-correction code (Surface, XZZX, etc.) and ranks Layer 2 material stacks across thousands of combinations. The engine covers the full pipeline from qubit and control hardware selection through to fabrication targets, replacing years of trial-and-error with a single lookup.
-        </p>
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          <Link to="/workspace" className="inline-flex items-center gap-2 rounded-md bg-cyan px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-cyan/90 transition">
-            Open Workspace <ArrowRight className="h-4 w-4" />
-          </Link>
-          <Link to="/results" className="inline-flex items-center gap-2 rounded-md border border-border/70 bg-surface-2/50 px-4 py-2.5 text-sm font-medium text-foreground hover:bg-surface-3/70 transition">
-            View Demo Results
-          </Link>
-          <Link to="/agent" className="inline-flex items-center gap-2 px-3 py-2 text-xs mono uppercase tracking-[0.18em] text-violet hover:text-violet/80 transition">
-            <Sparkles className="h-3.5 w-3.5" /> See AI reasoning trace
-          </Link>
-        </div>
-
-        <div id="capabilities" className="mt-20 grid gap-4 md:grid-cols-3">
-          <ValueCard
-            icon={<Network className="h-5 w-5" />}
-            eyebrow="01 · Topology"
-            title="Topology Optimization"
-            body="Search square grids, heavy-hex, modular clusters, and learned hybrids. Minimize SWAP overhead under fab-aware constraints."
-            accent="cyan"
-          />
-          <ValueCard
-            icon={<ShieldCheck className="h-5 w-5" />}
-            eyebrow="02 · QEC"
-            title="Error-Correction Readiness"
-            body="Score surface, heavy-hex, and color codes against the chosen process. Quantify logical error and physical-qubit overhead."
-            accent="violet"
-          />
-          <ValueCard
-            icon={<FlaskConical className="h-5 w-5" />}
-            eyebrow="03 · DSE"
-            title="Materials-Aware DSE"
-            body="Co-design across transmon, Si-spin, photonic, and neutral-atom profiles. Crosstalk, yield, and cryo complexity in one loop."
-            accent="green"
-          />
-        </div>
-
-        <div id="stack" className="mt-20 rounded-lg border border-border/60 bg-surface-1/60 backdrop-blur p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <div>
-              <div className="mono text-[10px] uppercase tracking-[0.18em] text-cyan">trusted by R&D pre-tapeout teams</div>
-              <div className="mt-1 text-sm text-muted-foreground">Compatible with major fab process kits and quantum SDKs.</div>
+      <main>
+        {/* HERO — headline + the live lattice. That's it. */}
+        <section className="mx-auto max-w-6xl px-6 pt-20 pb-16">
+          <div className="text-center max-w-3xl mx-auto">
+            <div className="mono text-[10px] uppercase tracking-[0.32em] mb-5" style={{ color: "var(--cyan)" }}>
+              junction lattice · 5 × 5 · live sampler
             </div>
-            <div className="mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">ArQiteQ · Hackathon 2026</div>
+            <h1 className="h-syne text-5xl md:text-7xl font-semibold leading-[0.98]">
+              Design chips to a
+              <br />
+              <span className="text-glow-cyan">QEC target.</span>
+            </h1>
+            <p className="mt-7 text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+              Pick the code. Pick the distance. Pick the logical error rate.
+              ArQitec returns the doping pattern, the predicted T1 / T2 / η, and a fabrication recipe.
+            </p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-x-6 gap-y-3 mono text-[11px] text-muted-foreground/80 uppercase tracking-[0.16em]">
-            {["Qiskit", "Cirq", "PennyLane", "TKET", "OpenQASM 3", "Stim", "Cadence", "Synopsys", "GDSII", "IBM Quantum", "Pasqal", "Quantinuum"].map(s => (
-              <span key={s} className="border-l border-border/60 pl-3">{s}</span>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      <footer className="relative z-10 border-t border-border/60 bg-surface-1/40">
-        <div className="mx-auto max-w-7xl px-6 py-5 flex flex-wrap items-center justify-between gap-3 mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-          <span>© 2026 ArQiteQ · Hackathon 2026</span>
-          <span>commit 9f2c1a · region: us-west-2 · region replica nominal</span>
-        </div>
-      </footer>
+          <div className="mt-14 flex flex-col items-center">
+            <HeroLattice />
+          </div>
+
+          <div className="mt-12 flex items-center justify-center gap-5">
+            <Link
+              to="/design"
+              className="inline-flex items-center gap-2 rounded-md px-6 py-3 text-sm font-medium transition hover:opacity-90"
+              style={{ background: "var(--cyan)", color: "#fff" }}
+            >
+              Design a chip <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              to="/why"
+              className="inline-flex items-center gap-2 text-sm font-medium text-foreground hover:opacity-70 transition"
+            >
+              How it works
+            </Link>
+          </div>
+        </section>
+
+        {/* WHAT YOU GET OUT — one tight strip, three things, no flourish */}
+        <section className="border-t border-border/60 bg-surface-2">
+          <div className="mx-auto max-w-6xl px-6 py-16">
+            <div className="mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground mb-8 text-center">
+              what comes out
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+              <OutputItem
+                num="01"
+                title="Doping pattern"
+                body="A 5×5 placement of dopant atoms across the junction lattice — the headline output, what the heatmap above shows."
+              />
+              <OutputItem
+                num="02"
+                title="Predicted T1 / T2 / η"
+                body="Coherence times and noise bias the chip is expected to hit. Each value graded against the QEC target's threshold."
+              />
+              <OutputItem
+                num="03"
+                title="Fabrication recipe"
+                body="Barrier thickness, N₂ partial pressure, deposition temperature. What an engineer actually takes to the cleanroom."
+              />
+            </div>
+          </div>
+        </section>
+
+        <footer className="border-t border-border/60">
+          <div className="mx-auto max-w-6xl px-6 py-8 flex items-center justify-between text-xs text-muted-foreground mono uppercase tracking-[0.18em]">
+            <span>ArQitec · hackathon 2026</span>
+            <span>v2.0.0-α</span>
+          </div>
+        </footer>
+      </main>
     </div>
   );
 }
 
-function ValueCard({ icon, eyebrow, title, body, accent }: { icon: React.ReactNode; eyebrow: string; title: string; body: string; accent: "cyan" | "violet" | "green" }) {
-  const ring = { cyan: "border-cyan/30 bg-cyan/5", violet: "border-violet/30 bg-violet/5", green: "border-neon-green/30 bg-neon-green/5" }[accent];
-  const text = { cyan: "text-cyan", violet: "text-violet", green: "text-neon-green" }[accent];
+function OutputItem({ num, title, body }: { num: string; title: string; body: string }) {
   return (
-    <div className="group relative rounded-lg border border-border/60 bg-surface-1/60 backdrop-blur p-5 hover:border-border transition">
-      <div className={`inline-flex items-center justify-center h-10 w-10 rounded-md border ${ring} ${text} mb-4`}>{icon}</div>
-      <div className={`mono text-[10px] uppercase tracking-[0.22em] ${text} mb-1.5`}>{eyebrow}</div>
-      <div className="text-lg font-semibold text-foreground">{title}</div>
-      <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{body}</p>
-      <div className="mt-4 flex items-center justify-between mono text-[10px] text-muted-foreground/70 uppercase tracking-[0.18em] border-t border-border/40 pt-3">
-        <span>module</span>
-        <span className={text}>operational</span>
+    <div>
+      <div className="mono text-[10px] uppercase tracking-[0.3em] mb-2" style={{ color: "var(--cyan)" }}>
+        {num}
       </div>
+      <div className="text-base font-semibold tracking-tight mb-2">{title}</div>
+      <p className="text-sm text-muted-foreground leading-relaxed">{body}</p>
     </div>
-  );
-}
-
-function BackgroundLattice() {
-  return (
-    <>
-      <div className="absolute inset-0 qa-grid-bg opacity-30" />
-      <div className="absolute -top-32 -right-32 h-[480px] w-[480px] rounded-full bg-cyan/10 blur-3xl" />
-      <div className="absolute top-1/3 -left-32 h-[420px] w-[420px] rounded-full bg-violet/10 blur-3xl" />
-      <svg className="absolute inset-0 h-full w-full opacity-[0.08] pointer-events-none" viewBox="0 0 1400 900">
-        {Array.from({ length: 28 }).map((_, r) =>
-          Array.from({ length: 44 }).map((_, c) => {
-            if ((r + c) % 3 === 2) return null;
-            const x = 30 + c * 32 + (r % 2 ? 16 : 0);
-            const y = 30 + r * 30;
-            return <circle key={`${r}-${c}`} cx={x} cy={y} r={1.8} fill="oklch(0.82 0.16 200)" />;
-          })
-        )}
-      </svg>
-    </>
   );
 }

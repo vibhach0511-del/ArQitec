@@ -64,50 +64,58 @@
 }
 
 :root {
-  --radius: 0.5rem;
-  /* ArQiteQ uses a single dark palette */
-  --background: oklch(0.16 0.02 250);
-  --foreground: oklch(0.96 0.01 240);
-  --surface-1: oklch(0.19 0.022 250);
-  --surface-2: oklch(0.22 0.025 252);
-  --surface-3: oklch(0.26 0.028 254);
-  --grid-line: oklch(0.32 0.03 255 / 0.4);
-  --card: oklch(0.19 0.022 250);
-  --card-foreground: oklch(0.96 0.01 240);
-  --popover: oklch(0.21 0.024 252);
-  --popover-foreground: oklch(0.96 0.01 240);
-  --primary: oklch(0.78 0.16 200);
-  --primary-foreground: oklch(0.12 0.02 250);
-  --secondary: oklch(0.26 0.028 254);
-  --secondary-foreground: oklch(0.96 0.01 240);
-  --muted: oklch(0.24 0.025 252);
-  --muted-foreground: oklch(0.68 0.03 250);
-  --accent: oklch(0.28 0.04 260);
-  --accent-foreground: oklch(0.96 0.01 240);
-  --destructive: oklch(0.65 0.22 25);
-  --destructive-foreground: oklch(0.98 0.01 240);
-  --border: oklch(0.3 0.03 255 / 0.5);
-  --input: oklch(0.28 0.03 255);
-  --ring: oklch(0.78 0.16 200);
-  --accent-cyan: oklch(0.82 0.16 200);
-  --accent-violet: oklch(0.7 0.21 295);
-  --accent-blue: oklch(0.7 0.18 250);
-  --accent-green: oklch(0.78 0.18 150);
-  --accent-amber: oklch(0.82 0.16 75);
-  --accent-red: oklch(0.7 0.22 25);
-  --chart-1: oklch(0.82 0.16 200);
-  --chart-2: oklch(0.7 0.21 295);
-  --chart-3: oklch(0.78 0.18 150);
-  --chart-4: oklch(0.82 0.16 75);
-  --chart-5: oklch(0.7 0.22 25);
-  --sidebar: oklch(0.17 0.022 250);
-  --sidebar-foreground: oklch(0.88 0.015 240);
-  --sidebar-primary: oklch(0.82 0.16 200);
-  --sidebar-primary-foreground: oklch(0.12 0.02 250);
-  --sidebar-accent: oklch(0.24 0.028 254);
-  --sidebar-accent-foreground: oklch(0.96 0.01 240);
-  --sidebar-border: oklch(0.28 0.03 255 / 0.5);
-  --sidebar-ring: oklch(0.82 0.16 200);
+  --radius: 0.75rem;
+  /* ArQitec theme — QuantumFlow-derived: deep navy + bright cyan + violet.
+     The background isn't pure black — it's HSL(222, 47%, 4%) — a very
+     slight blue tint that makes the cyan accent read as "lit from within"
+     instead of merely colored. */
+  --background: hsl(222, 47%, 4%);
+  --foreground: hsl(210, 40%, 96%);
+  --surface-1: hsl(222, 40%, 6%);
+  --surface-2: hsl(222, 30%, 10%);
+  --surface-3: hsl(222, 30%, 14%);
+  --grid-line: hsla(210, 40%, 96%, 0.06);
+  --card: hsl(222, 40%, 6%);
+  --card-foreground: hsl(210, 40%, 96%);
+  --popover: hsl(222, 40%, 6%);
+  --popover-foreground: hsl(210, 40%, 96%);
+  --primary: hsl(191, 97%, 55%);
+  --primary-foreground: hsl(222, 47%, 4%);
+  --secondary: hsl(222, 30%, 12%);
+  --secondary-foreground: hsl(210, 40%, 80%);
+  --muted: hsl(222, 30%, 10%);
+  --muted-foreground: hsl(215, 20%, 55%);
+  --accent: hsl(263, 70%, 60%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --border: hsl(222, 30%, 14%);
+  --input: hsl(222, 30%, 12%);
+  --ring: hsl(191, 97%, 55%);
+  /* shortcut hex aliases for inline styles */
+  --cyan: hsl(191, 97%, 55%);
+  --cyan-soft: hsla(191, 97%, 55%, 0.12);
+  --cyan-strong: hsl(191, 97%, 45%);
+  --violet: hsl(263, 70%, 60%);
+  --violet-soft: hsla(263, 70%, 60%, 0.12);
+  --glow-cyan: 0 0 22px hsla(191, 97%, 55%, 0.45);
+  --glow-violet: 0 0 22px hsla(263, 70%, 60%, 0.45);
+  --chart-1: hsl(191, 97%, 55%);
+  --chart-2: hsl(263, 70%, 60%);
+  --chart-3: hsl(160, 84%, 39%);
+  --chart-4: hsl(43, 74%, 66%);
+  --chart-5: hsl(27, 87%, 67%);
+  --sidebar: hsl(222, 40%, 5%);
+  --sidebar-foreground: hsl(210, 40%, 80%);
+  --sidebar-primary: hsl(191, 97%, 55%);
+  --sidebar-primary-foreground: hsl(222, 47%, 4%);
+  --sidebar-accent: hsl(222, 30%, 10%);
+  --sidebar-accent-foreground: hsl(210, 40%, 80%);
+  --sidebar-border: hsl(222, 30%, 14%);
+  --sidebar-ring: hsl(191, 97%, 55%);
+  /* font tokens */
+  --font-heading: "Syne", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
 }
 
 .dark {
@@ -122,7 +130,41 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: var(--font-body);
     font-feature-settings: "ss01", "cv11";
+  }
+
+  /* Heading font — Syne. Apply via .h-syne or directly with font-family. */
+  .h-syne {
+    font-family: var(--font-heading);
+    letter-spacing: -0.02em;
+  }
+
+  /* Glow utilities used by hero CTAs and the wordmark */
+  .glow-cyan   { box-shadow: var(--glow-cyan); }
+  .glow-violet { box-shadow: var(--glow-violet); }
+  .text-glow-cyan {
+    color: var(--cyan);
+    text-shadow: 0 0 18px hsla(191, 97%, 55%, 0.55);
+  }
+
+  /* ArQitec form inputs — clean white with subtle border, cyan focus ring */
+  .input-base {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 0.4rem;
+    background: var(--surface-1);
+    color: var(--foreground);
+    font-family: inherit;
+    font-size: 0.875rem;
+    transition: border 0.15s, box-shadow 0.15s;
+  }
+  .input-base:hover { border-color: rgba(10, 10, 10, 0.18); }
+  .input-base:focus {
+    outline: none;
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 3px var(--cyan-soft);
   }
 
   .font-mono, .mono {
