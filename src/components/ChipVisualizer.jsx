@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ERROR_BUDGETS = [
-  { rate: '10⁻³', label: 'High Noise', color: '#ef4444', glow: 'rgba(239,68,68,0.4)', qubits: 9, threshold: 0.82 },
-  { rate: '10⁻⁴', label: 'Moderate', color: '#f59e0b', glow: 'rgba(245,158,11,0.4)', qubits: 25, threshold: 0.94 },
-  { rate: '10⁻⁵', label: 'Low Noise', color: '#22d3ee', glow: 'rgba(34,211,238,0.4)', qubits: 49, threshold: 0.985 },
-  { rate: '10⁻⁶', label: 'Ultra-Low', color: '#a78bfa', glow: 'rgba(167,139,250,0.4)', qubits: 81, threshold: 0.998 },
+  { rate: '10⁻³', label: 'High Noise', color: '#7c3aed', glow: 'rgba(124, 58, 237, 0.4)', qubits: 9, threshold: 0.82 },
+  { rate: '10⁻⁴', label: 'Moderate', color: '#a78bfa', glow: 'rgba(167, 139, 250, 0.4)', qubits: 25, threshold: 0.94 },
+  { rate: '10⁻⁵', label: 'Low Noise', color: '#22d3ee', glow: 'rgba(34, 211, 238, 0.4)', qubits: 49, threshold: 0.985 },
+  { rate: '10⁻⁶', label: 'Ultra-Low', color: '#67e8f9', glow: 'rgba(103, 232, 249, 0.4)', qubits: 81, threshold: 0.998 },
 ];
 
 function QubitGrid({ n, color, glow, fidelity }) {
