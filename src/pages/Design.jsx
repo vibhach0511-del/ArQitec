@@ -8,7 +8,7 @@ export default function Design() {
       {/* Full-bleed optimizer. No form, no gating — the optimizer is the page. */}
       <div className="flex-1 pt-16">
         <iframe
-          src={`/junction_doping_optimizer_v2.html?v=4&t=${Date.now()}`}
+          src={`/junction_doping_optimizer_v5.html?v=5&t=${Date.now()}`}
           title="Junction Doping Optimizer"
           className="w-full"
           style={{

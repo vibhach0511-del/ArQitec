@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Junction Doping Optimizer — ArQiteQ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+  :root{
+    --bg:#080808;--bg2:#0f0f0f;--bg3:#141414;--bg4:#1a1a1a;
+    --border:#1e1e1e;--border2:#2a2a2a;
+    --orange:#D85A30;--orange2:#f06030;
+    --green:#1D9E75;--red:#c0392b;--amber:#BA7517;--purple:#7F77DD;
+    --text:#e8e8e8;--text2:#888;--text3:#444;
+    --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--mono);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.02) 2px,rgba(0,0,0,.02) 4px);pointer-events:none;z-index:9999;}
+  header{border-bottom:1px solid var(--border2);padding:10px 18px;display:flex;align-items:center;gap:12px;background:var(--bg2);}
+  .logo{font-size:11px;font-weight:700;letter-spacing:3px;color:var(--orange);text-transform:uppercase;}
+  .subtitle{font-size:9px;color:var(--text3);letter-spacing:1px;}
+  .tsu-badge{margin-left:auto;font-size:8px;color:var(--purple);letter-spacing:1px;border:1px solid var(--purple);padding:3px 8px;border-radius:2px;white-space:nowrap;}
+  .app{display:grid;grid-template-columns:295px 1fr;height:calc(100vh - 45px);}
+  .left{border-right:1px solid var(--border2);background:var(--bg2);overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px;}
+  .sec{border-bottom:1px solid var(--border);padding-bottom:10px;}
+  .sec-label{font-size:8px;font-weight:700;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:7px;}
+  .field{margin-bottom:8px;}
+  .field label{display:block;font-size:8px;color:var(--text2);letter-spacing:1px;margin-bottom:3px;text-transform:uppercase;}
+  .field select,.field input{width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:11px;padding:6px 8px;border-radius:2px;outline:none;transition:border-color .2s;appearance:none;}
+  .field select:focus,.field input:focus{border-color:var(--orange);}
+  .field select option{background:var(--bg3);}
+  .info-box{font-size:8px;color:var(--text2);line-height:1.55;margin-top:3px;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:2px;}
+  .rec-tag{display:inline-block;font-size:7px;background:rgba(127,119,221,.1);border:1px solid var(--purple);color:var(--purple);padding:1px 4px;border-radius:1px;margin:1px;}
+  .warn-tag{display:inline-block;font-size:7px;color:var(--red);}
+  .run-btn{width:100%;padding:10px;background:var(--orange);color:#fff;border:none;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:background .2s;}
+  .run-btn:hover{background:var(--orange2);}
+  .prog-bar{width:100%;height:2px;background:var(--border);border-radius:1px;overflow:hidden;margin-top:5px;}
+  .prog-fill{height:100%;background:var(--orange);transition:width .2s;width:0%;}
+  .iter-counter{font-size:8px;color:var(--text3);text-align:center;margin-top:3px;}
+  .tsu-panel{background:rgba(127,119,221,.06);border:1px solid rgba(127,119,221,.2);border-radius:2px;padding:7px;font-size:8px;color:var(--text2);line-height:1.65;}
+  .tsu-panel b{color:var(--purple);}
+  .cal-panel{background:rgba(29,158,117,.05);border:1px solid rgba(29,158,117,.2);border-radius:2px;padding:7px;font-size:8px;color:var(--text2);line-height:1.65;}
+  .cal-panel b{color:var(--green);}
+  .search-note{font-size:8px;color:var(--text3);line-height:1.7;border:1px solid var(--border);padding:6px;border-radius:2px;background:var(--bg);}
+  .search-note .hi{color:var(--orange);}
+  .right{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto 1fr;gap:1px;background:var(--border2);overflow:hidden;}
+  .cell{background:var(--bg);padding:12px;overflow:hidden;}
+  .cell.full{grid-column:1/-1;}
+  .cell-label{font-size:8px;font-weight:700;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:8px;}
+  .heatmap-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .lattice{display:grid;gap:3px;width:100%;max-width:210px;}
+  .lc{aspect-ratio:1;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:11px;transition:background .15s,border-color .15s,box-shadow .15s;border:1px solid transparent;position:relative;}
+  .lc.u{background:var(--bg3);border-color:var(--border);color:var(--text3);}
+  .lc.h{background:rgba(216,90,48,.2);border-color:var(--orange);color:var(--orange);}
+  .lc.d-ok{background:rgba(29,158,117,.25);border-color:var(--green);color:var(--green);box-shadow:0 0 6px rgba(29,158,117,.3);}
+  .lc.d-fail{background:rgba(192,57,43,.25);border-color:var(--red);color:var(--red);box-shadow:0 0 6px rgba(192,57,43,.3);}
+  .lc.d-warn{background:rgba(186,117,23,.25);border-color:var(--amber);color:var(--amber);}
+  .lc.active{animation:tsu-sample 0.2s ease-out;}
+  @keyframes tsu-sample{0%{transform:scale(1.2);opacity:.6}100%{transform:scale(1);opacity:1}}
+  .mos-tooltip{position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--border2);border-radius:2px;padding:3px 6px;font-size:7px;color:var(--text2);white-space:nowrap;z-index:100;pointer-events:none;display:none;}
+  .lc:hover .mos-tooltip{display:block;}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;font-size:7px;color:var(--text2);}
+  .leg-dot{width:7px;height:7px;border-radius:1px;display:inline-block;margin-right:2px;}
+  .node-stream{font-size:8px;color:var(--text3);line-height:1.6;height:44px;overflow:hidden;margin-top:4px;border-top:1px solid var(--border);padding-top:4px;width:100%;}
+  .ns-ok{color:var(--green);}.ns-fail{color:var(--red);}.ns-pend{color:var(--amber);}
+  .verdict-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:5px;}
+  .verdict-big{font-family:'Space Mono',monospace;font-size:34px;font-weight:700;letter-spacing:2px;transition:color .3s;}
+  .verdict-big.pass{color:var(--green);}.verdict-big.fail{color:var(--red);}.verdict-big.marginal{color:var(--amber);}.verdict-big.wait{color:var(--text3);}
+  .verdict-stats{font-size:9px;color:var(--text2);text-align:center;line-height:1.9;}
+  .verdict-stats .hl{color:var(--text);}.verdict-stats .pv{color:var(--green);}.verdict-stats .fv{color:var(--red);}
+  .chart-wrap{width:100%;height:95px;}
+  canvas{width:100%!important;height:100%!important;}
+  .gibbs-panel{background:rgba(186,117,23,.05);border:1px solid rgba(186,117,23,.2);border-radius:2px;padding:6px 8px;font-size:8px;color:var(--text2);line-height:1.65;margin-top:5px;}
+  .gibbs-panel b{color:var(--amber);}
+  .out-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:6px;}
+  .out-item{background:var(--bg3);border:1px solid var(--border);border-radius:2px;padding:7px 9px;}
+  .out-item-label{font-size:7px;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;margin-bottom:2px;}
+  .out-item-val{font-size:11px;font-weight:600;color:var(--text);}
+  .out-item-val .ok{color:var(--green);}.out-item-val .nok{color:var(--red);}
+  .fab-box{grid-column:1/-1;background:var(--bg);border:1px solid var(--border);border-radius:2px;padding:8px 10px;font-size:9px;color:var(--text2);line-height:1.8;}
+  .fab-box span{color:var(--orange);}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">Junction Doping Optimizer — ArQiteQ</div>
+    <div class="subtitle">QEC → material · TSU p-bit Boltzmann · Gibbs ΔG · MOS node check · calibrated to Google Willow 2024</div>
+  </div>
+  <div class="tsu-badge">TSU — Extropic p-bit · analog Boltzmann sampler</div>
+</header>
+
+<div class="app">
+
+<div class="left">
+
+  <div class="sec">
+    <div class="sec-label">Qubit circuit (Tier 1–3)</div>
+    <div class="field">
+      <label>Qubit type</label>
+      <select id="qubit_type" onchange="onQubitChange()">
+        <optgroup label="── Tier 1: Production ──">
+          <option value="transmon">Transmon</option>
+          <option value="fluxonium">Fluxonium</option>
+        </optgroup>
+        <optgroup label="── Tier 2: Emerging ──">
+          <option value="cat">Cat qubit (dissipative)</option>
+          <option value="kerr_cat">Kerr-cat qubit ★</option>
+          <option value="tunable_transmon">Tunable Transmon (SQUID)</option>
+          <option value="csfq">Cap-Shunted Flux (CSFQ)</option>
+          <option value="dual_rail">Dual-Rail Cavity</option>
+          <option value="snailmon">SNAILmon ★</option>
+        </optgroup>
+        <optgroup label="── Tier 3: Research ──">
+          <option value="zero_pi">0-π qubit</option>
+          <option value="heavy_fluxonium">Heavy Fluxonium</option>
+          <option value="unimon">Unimon (IQM) ★</option>
+          <option value="bifluxon">Bifluxon</option>
+          <option value="gatemon">Gatemon</option>
+          <option value="fluxonium_transmon">Fluxonium-Transmon hybrid ★</option>
+          <option value="protected_sc">Protected SC qubit ★</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="info-box" id="qubit_info">Select a qubit type.</div>
+    <div class="field" style="margin-top:8px">
+      <label>Qubit frequency (GHz)</label>
+      <input type="number" id="qubit_freq" value="5.0" min="0.01" max="20" step="0.5"/>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-label">Materials</div>
+    <div class="field">
+      <label>Host material</label>
+      <select id="host_material" onchange="onMatChange()">
+        <optgroup label="── Aluminium ──">
+          <option value="aluminum_oxide_dolan">AlOx Dolan (T1=270μs, Biznárová 2024)</option>
+          <option value="aluminum_oxide_manhattan">AlOx Manhattan</option>
+          <option value="aluminum_oxide_ald">ALD Al₂O₃ (T1=310μs)</option>
+        </optgroup>
+        <optgroup label="── Niobium ──">
+          <option value="niobium_nitride">NbN (T1=30μs)</option>
+          <option value="niobium_oxide">Nb-NbOx (T1=50μs)</option>
+          <option value="nbtio">NbTiN (T1=40μs)</option>
+        </optgroup>
+        <optgroup label="── Tantalum ──">
+          <option value="tantalum_film">α-Ta (T1=230μs, Place 2021)</option>
+          <option value="tantalum_cap">Ta cap/Nb (T1=300μs, Bal 2024)</option>
+        </optgroup>
+        <optgroup label="── Hafnium/Zr ──">
+          <option value="hafnium_oxide">HfOx (T1=180μs)</option>
+          <option value="zirconium_oxide">ZrO₂ (T1=160μs)</option>
+        </optgroup>
+        <optgroup label="── Nitrides ──">
+          <option value="aluminum_nitride">AlN (T1=200μs)</option>
+          <option value="titanium_nitride">TiN (T1=150μs)</option>
+          <option value="silicon_nitride">Si₃N₄ (T1=100μs)</option>
+        </optgroup>
+        <optgroup label="── Oxides ──">
+          <option value="magnesium_oxide">MgOx (T1=160μs)</option>
+          <option value="silicon_oxide">SiOx (T1=90μs)</option>
+          <option value="indium_oxide">InOx (T1=70μs)</option>
+        </optgroup>
+        <optgroup label="── Exotic ──">
+          <option value="granular_aluminum">grAl (T1=23μs, Grünhaupt 2019)</option>
+          <option value="amorphous_silicon">aSi (T1=80μs)</option>
+          <option value="van_der_waals">hBN vdW (T1=60μs)</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="info-box" id="mat_info">Select a material.</div>
+    <div class="field" style="margin-top:8px">
+      <label>Dopant ★</label>
+      <select id="dopant" onchange="onMatChange()">
+        <option value="none">None — pure host</option>
+        <optgroup label="── TLS suppressing ──">
+          <option value="nitrogen">N — 40% TLS supp (Shim 2024)</option>
+          <option value="fluorine">F — 55% TLS supp (Gordon 2022)</option>
+          <option value="erbium">Er — 30% TLS supp (Fritz 2023)</option>
+          <option value="yttrium">Y — 25% TLS supp</option>
+          <option value="lanthanum">La — 20% TLS supp</option>
+        </optgroup>
+        <optgroup label="── Mild ──">
+          <option value="hydrogen">H — 20% TLS supp</option>
+          <option value="silicon_dop">Si — slight increase</option>
+          <option value="titanium_dop">Ti — structural</option>
+          <option value="oxygen_dop">O — stoichiometry</option>
+        </optgroup>
+        <optgroup label="── ⚠ Increases TLS ──">
+          <option value="carbon">C — +10% TLS</option>
+          <option value="sulfur">S — +15% TLS</option>
+        </optgroup>
+      </select>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-label">QEC target</div>
+    <div class="field">
+      <label>Target QEC code</label>
+      <select id="qec_code" onchange="onQECChange()">
+        <optgroup label="── Surface family ──">
+          <option value="surface">Surface code (Fowler 2012)</option>
+          <option value="rotated_surface">Rotated surface (Willow)</option>
+          <option value="toric">Toric code (Kitaev 1997)</option>
+          <option value="surface_17">Surface-17 d=3</option>
+          <option value="xysurface">XY surface (Tuckett 2020)</option>
+          <option value="clifford_deformed">Clifford-deformed (Dua 2024)</option>
+        </optgroup>
+        <optgroup label="── XZZX ──">
+          <option value="xzzx">XZZX surface (Bonilla Ataides 2021)</option>
+          <option value="xzzx_713">XZZX [7,1,3]</option>
+          <option value="quantum_repetition">Repetition (extreme bias)</option>
+        </optgroup>
+        <optgroup label="── Color ──">
+          <option value="color">2D color (Bombin 2006)</option>
+          <option value="triangular_color">Triangular color</option>
+          <option value="color_488">Color 4.8.8</option>
+        </optgroup>
+        <optgroup label="── Subsystem ──">
+          <option value="heavy_hex">Heavy-Hex IBM (Chamberland 2020)</option>
+          <option value="bacon_shor">Bacon-Shor</option>
+          <option value="shor_nine">Shor [9,1,3]</option>
+          <option value="steane">Steane [7,1,3]</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="info-box" id="qec_info">Select a QEC code.</div>
+    <div class="field" style="margin-top:8px">
+      <label>Code distance d</label>
+      <input type="number" id="qec_distance" value="5" min="3" max="15" step="2"/>
+    </div>
+    <div class="field">
+      <label>Target logical error rate</label>
+      <input type="number" id="target_error" value="0.000001" step="any"/>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-label">TSU parameters</div>
+    <div class="tsu-panel">
+      <b>Extropic TSU — Thermodynamic Sampling Unit</b><br/>
+      Analog p-bit array · P(flip)=1/(1+exp(β·ΔE)) — exact Boltzmann<br/>
+      TSU does not compute this probability — it IS the probability<br/>
+      At N=50: 10^752 configs sampled without enumeration
+    </div>
+    <div class="cal-panel" style="margin-top:6px">
+      <b>Calibrated to published hardware</b><br/>
+      Google Willow 2024: T1=68μs · 0.143%/cycle · d=7 below threshold (Nature 2024)<br/>
+      Surface threshold: 0.5–1.1% per gate (Stephens 2014)<br/>
+      Pass requires idle error &lt; threshold × safety. Most material/code pairs FAIL.
+    </div>
+    <div class="field" style="margin-top:8px">
+      <label>Lattice size N</label>
+      <input type="number" id="lattice_n" value="5" min="3" max="8" step="1" onchange="updateSearchSpace()"/>
+    </div>
+    <div class="field">
+      <label>β inverse temp (greedier when higher)</label>
+      <input type="number" id="tsu_beta" value="800" min="10" max="5000" step="100"/>
+    </div>
+    <div class="field">
+      <label>Iterations</label>
+      <input type="number" id="n_iter" value="1000" min="200" max="5000" step="100"/>
+    </div>
+  </div>
+
+  <div>
+    <button class="run-btn" id="run_btn" onclick="runOptimizer()">▶ Run TSU optimizer</button>
+    <div class="prog-bar"><div class="prog-fill" id="progress_fill"></div></div>
+    <div class="iter-counter" id="iter_counter">ready</div>
+  </div>
+
+  <div class="search-note" id="search_note">
+    <span id="ss_current">N=5 → 2^25 = <span class="hi">33,554,432</span></span><br/>
+    N=50 → 10^752 — <span class="hi">TSU only</span><br/>
+    <span style="color:var(--text3)">dopant changes energy · not search space</span>
+  </div>
+
+</div>
+
+<div class="right">
+
+  <div class="cell">
+    <div class="cell-label">Junction lattice — TSU sampling · MOS node check</div>
+    <div class="heatmap-wrap">
+      <div class="lattice" id="lattice_grid"></div>
+      <div class="legend">
+        <span><span class="leg-dot" style="background:var(--orange);opacity:.7"></span>● host</span>
+        <span><span class="leg-dot" style="background:var(--green);opacity:.7"></span>◆ OK</span>
+        <span><span class="leg-dot" style="background:var(--red);opacity:.7"></span>✕ FAIL</span>
+        <span><span class="leg-dot" style="background:var(--amber);opacity:.7"></span>◈ warn</span>
+        <span><span class="leg-dot" style="background:var(--bg3);border:1px solid var(--border)"></span>· undoped</span>
+      </div>
+      <div class="node-stream" id="node_stream">node MOS status appears here during sampling…</div>
+    </div>
+  </div>
+
+  <div class="cell">
+    <div class="cell-label">QEC verdict</div>
+    <div class="verdict-wrap">
+      <div class="verdict-big wait" id="verdict_text">—</div>
+      <div class="verdict-stats" id="verdict_stats">run optimizer</div>
+    </div>
+  </div>
+
+  <div class="cell">
+    <div class="cell-label">QEC score (threshold line shown)</div>
+    <div class="chart-wrap"><canvas id="score_chart"></canvas></div>
+  </div>
+
+  <div class="cell">
+    <div class="cell-label">Gibbs ΔG (kJ/mol) — TSU minimising</div>
+    <div class="chart-wrap"><canvas id="gibbs_chart"></canvas></div>
+    <div class="gibbs-panel" id="gibbs_panel"><b>ΔG = ΔH − TΔS</b> · ΔGf: <span id="g_host">—</span> · mix: <span id="g_mix">—</span> · <span id="g_stable">—</span></div>
+  </div>
+
+  <div class="cell full" style="background:var(--bg2);border-top:1px solid var(--border2)">
+    <div class="cell-label">Output specification</div>
+    <div class="out-grid">
+      <div class="out-item"><div class="out-item-label">Predicted T1</div><div class="out-item-val" id="out_t1">—</div></div>
+      <div class="out-item"><div class="out-item-label">Idle err/cycle</div><div class="out-item-val" id="out_idle">—</div></div>
+      <div class="out-item"><div class="out-item-label">Threshold</div><div class="out-item-val" id="out_thr">—</div></div>
+      <div class="out-item"><div class="out-item-label">Margin to threshold</div><div class="out-item-val" id="out_margin">—</div></div>
+      <div class="out-item"><div class="out-item-label">Gibbs ΔGf</div><div class="out-item-val" id="out_gibbs">—</div></div>
+      <div class="out-item"><div class="out-item-label">TLS density</div><div class="out-item-val" id="out_tls">—</div></div>
+      <div class="out-item"><div class="out-item-label">Node pass rate</div><div class="out-item-val" id="out_nodes">—</div></div>
+      <div class="out-item"><div class="out-item-label">QEC code</div><div class="out-item-val" id="out_qec">—</div></div>
+      <div class="fab-box" id="fab_recipe">Run optimizer to generate fabrication recipe.</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════
+// CALIBRATION CONSTANTS — from published hardware
+// ════════════════════════════════════════════════════════════════════
+// Google Willow (Nature 2024): T1=68μs, cycle=1.1μs, 0.143%/cycle, d=7 PASSES
+// Earlier Sycamore (Nature 2023): T1=20μs, cycle=0.921μs, ~3%/cycle, d=5 BARELY at threshold
+// Surface threshold: 0.5%–1.1% per gate (Stephens 2014)
+//
+// Key physics: idle_error_per_cycle ≈ cycle_time_us / T1_us  (from T1 decay)
+// PLUS gate errors. For PASS, total per-cycle error must be < threshold.
+//
+// This is HARD: even Willow's T1=68μs gives idle error 1.1/68 = 1.6% — and that's
+// the world's best. Most materials with shorter T1, or demanding codes with low
+// thresholds (color 0.3%, Steane 0.01%), GENUINELY CANNOT PASS.
+// ════════════════════════════════════════════════════════════════════
+
+const WILLOW_T1 = 68;      // μs — Google Willow 2024 mean T1
+const WILLOW_CYCLE = 1.1;  // μs — Willow cycle duration
+const GATE_ERROR_FLOOR = 0.0015; // 0.15% — irreducible gate error floor (Willow CZ ~0.3%)
+
+const QUBITS = {
+  transmon:{label:'Transmon',tier:1,T1:[50,500],eta_base:3.0,freq:[4,8],users:'IBM·Google·Rigetti·IQM·OQC',rec:['surface','rotated_surface','xzzx'],desc:'Workhorse. T1 avg 270μs (Biznárová 2024). Willow used transmons at T1=68μs.'},
+  fluxonium:{label:'Fluxonium',tier:1,T1:[100,1500],eta_base:25.0,freq:[0.1,1],users:'Atlantic Quantum·IBM',rec:['xzzx','bacon_shor'],desc:'High anharmonicity, Z-biased. Somoroff 2023 T1>1ms. Slow gates increase cycle time.'},
+  cat:{label:'Cat qubit',tier:2,T1:[200,2000],eta_base:500.0,freq:[4,8],users:'AWS·Alice&Bob·Yale',rec:['xzzx','quantum_repetition'],desc:'Dissipative cat. Extreme Z-bias. Lescanne 2020. Cavity material sets T1.'},
+  kerr_cat:{label:'Kerr-cat ★',tier:2,T1:[100,1000],eta_base:100.0,freq:[4,8],users:'Yale·Caltech',rec:['xzzx','quantum_repetition'],desc:'NEW: Two-photon Kerr oscillator. Puri 2019. Bit-flip suppressed by squeezing. No engineered dissipation.'},
+  tunable_transmon:{label:'Tunable Transmon',tier:2,T1:[20,200],eta_base:2.5,freq:[4,8],users:'Google·Rigetti',rec:['surface','rotated_surface'],desc:'SQUID tuning. Extra flux noise. Google Sycamore/Willow base.'},
+  csfq:{label:'CSFQ',tier:2,T1:[40,100],eta_base:6.0,freq:[2,6],users:'MIT-LL·D-Wave',rec:['surface','xzzx'],desc:'Cap-shunted flux. Strong anharmonicity. Yan 2016.'},
+  dual_rail:{label:'Dual-Rail Cavity',tier:2,T1:[500,5000],eta_base:1.0,freq:[4,8],users:'QCI·Yale',rec:['surface'],desc:'Two cavities. Photon loss → erasure. Higher threshold. Teoh 2023.'},
+  snailmon:{label:'SNAILmon ★',tier:2,T1:[50,400],eta_base:4.0,freq:[4,7],users:'Yale·UC Berkeley',rec:['surface','rotated_surface'],desc:'NEW: SNAIL-based qubit. Large positive anharmonicity. Frattini 2017. Native parametric ops.'},
+  zero_pi:{label:'0-π qubit',tier:3,T1:[500,5000],eta_base:50.0,freq:[0.1,1],users:'Princeton·Delft',rec:['xzzx','quantum_repetition'],desc:'Intrinsically protected. Brooks 2013, Gyenis 2021. Hard to fabricate.'},
+  heavy_fluxonium:{label:'Heavy Fluxonium',tier:3,T1:[500,2000],eta_base:100.0,freq:[0.01,0.3],users:'Maryland·Yale',rec:['xzzx','bacon_shor'],desc:'Very low freq, extreme bias. Earnest 2018. Slow readout.'},
+  unimon:{label:'Unimon (IQM) ★',tier:3,T1:[20,100],eta_base:4.0,freq:[3,7],users:'IQM',rec:['surface','xzzx'],desc:'Single JJ in resonator. Hyyppä 2022. 5% doping shift destroys protection. Short T1 currently.'},
+  bifluxon:{label:'Bifluxon',tier:3,T1:[200,1000],eta_base:15.0,freq:[0.1,1],users:'Delft',rec:['surface','color'],desc:'Doubly-protected. Kalashnikov 2020. Very early stage.'},
+  gatemon:{label:'Gatemon',tier:3,T1:[1,10],eta_base:2.0,freq:[3,8],users:'Microsoft·QuTech·NBI',rec:['surface'],desc:'Semiconductor JJ. Voltage-tunable. Larsen 2015. T1 just 1-10μs — usually FAILS.'},
+  fluxonium_transmon:{label:'Fluxonium-Transmon ★',tier:3,T1:[100,800],eta_base:12.0,freq:[1,5],users:'IBM·MIT',rec:['xzzx','surface'],desc:'NEW: Coupled hybrid. Nesterov 2024. High anharmonicity + fast readout.'},
+  protected_sc:{label:'Protected SC ★',tier:3,T1:[200,2000],eta_base:30.0,freq:[0.5,3],users:'Google·Yale',rec:['xzzx','surface'],desc:'NEW: Circuit-level protected. Smith 2020 npj QI. Topology suppresses noise.'},
+};
+
+const MATERIALS = {
+  aluminum_oxide_dolan:    {label:'AlOx Dolan', T1:270,eta:3.0,TLS:1.2,J:0.15,h:0.08,nm:2.0,Gf:-1582,Hmix:-95,trapEv:0.10,conf:'measured',ref:'Biznárová 2024 npj QI'},
+  aluminum_oxide_manhattan:{label:'AlOx Manhattan',T1:280,eta:3.2,TLS:1.0,J:0.14,h:0.07,nm:2.0,Gf:-1582,Hmix:-100,trapEv:0.10,conf:'measured',ref:'Manhattan process'},
+  aluminum_oxide_ald:      {label:'ALD Al₂O₃',T1:310,eta:3.5,TLS:0.8,J:0.13,h:0.06,nm:1.8,Gf:-1582,Hmix:-102,trapEv:0.09,conf:'estimated',ref:'ALD controlled'},
+  niobium_nitride:         {label:'NbN',T1:30,eta:8.0,TLS:0.8,J:0.20,h:0.12,nm:3.1,Gf:-237,Hmix:-45,trapEv:0.08,conf:'measured',ref:'Grünhaupt 2019'},
+  niobium_oxide:           {label:'Nb-NbOx',T1:50,eta:3.0,TLS:2.0,J:0.17,h:0.09,nm:3.5,Gf:-185,Hmix:-30,trapEv:0.13,conf:'measured',ref:'Bal 2024'},
+  nbtio:                   {label:'NbTiN',T1:40,eta:7.5,TLS:1.0,J:0.19,h:0.11,nm:3.0,Gf:-210,Hmix:-40,trapEv:0.09,conf:'estimated',ref:'NbTiN'},
+  tantalum_film:           {label:'α-Ta',T1:230,eta:4.0,TLS:0.9,J:0.13,h:0.06,nm:2.3,Gf:-1911,Hmix:-110,trapEv:0.08,conf:'measured',ref:'Place 2021'},
+  tantalum_cap:            {label:'Ta cap/Nb',T1:300,eta:4.5,TLS:0.7,J:0.12,h:0.055,nm:2.1,Gf:-1911,Hmix:-115,trapEv:0.07,conf:'measured',ref:'Bal 2024 median 300μs'},
+  hafnium_oxide:           {label:'HfOx',T1:180,eta:5.0,TLS:1.0,J:0.18,h:0.10,nm:2.8,Gf:-1144,Hmix:-75,trapEv:0.12,conf:'estimated',ref:'ALD HfO₂'},
+  zirconium_oxide:         {label:'ZrO₂',T1:160,eta:4.5,TLS:1.1,J:0.17,h:0.09,nm:3.0,Gf:-1040,Hmix:-70,trapEv:0.11,conf:'speculative',ref:'ZrO₂'},
+  aluminum_nitride:        {label:'AlN',T1:200,eta:4.0,TLS:0.9,J:0.22,h:0.14,nm:2.5,Gf:-318,Hmix:-50,trapEv:0.09,conf:'estimated',ref:'AlN'},
+  titanium_nitride:        {label:'TiN',T1:150,eta:5.5,TLS:1.3,J:0.21,h:0.13,nm:2.8,Gf:-309,Hmix:-48,trapEv:0.10,conf:'measured',ref:'Vissers 2010'},
+  silicon_nitride:         {label:'Si₃N₄',T1:100,eta:3.5,TLS:1.5,J:0.16,h:0.09,nm:3.2,Gf:-745,Hmix:-60,trapEv:0.11,conf:'estimated',ref:'PECVD'},
+  magnesium_oxide:         {label:'MgOx',T1:160,eta:4.5,TLS:1.1,J:0.25,h:0.16,nm:3.5,Gf:-601,Hmix:-65,trapEv:0.11,conf:'estimated',ref:'MgO'},
+  silicon_oxide:           {label:'SiOx',T1:90,eta:2.5,TLS:2.0,J:0.12,h:0.06,nm:4.0,Gf:-856,Hmix:-55,trapEv:0.14,conf:'measured',ref:'Native Si oxide'},
+  indium_oxide:            {label:'InOx',T1:70,eta:2.0,TLS:2.5,J:0.11,h:0.05,nm:4.5,Gf:-295,Hmix:-30,trapEv:0.16,conf:'speculative',ref:'InOx'},
+  granular_aluminum:       {label:'grAl',T1:23,eta:15.0,TLS:1.5,J:0.16,h:0.08,nm:5.0,Gf:-1582,Hmix:-90,trapEv:0.12,conf:'measured',ref:'Grünhaupt 2019 Nat Mater'},
+  amorphous_silicon:       {label:'aSi',T1:80,eta:2.0,TLS:2.5,J:0.11,h:0.05,nm:4.5,Gf:-455,Hmix:-40,trapEv:0.15,conf:'speculative',ref:'Al-aSi-Al'},
+  van_der_waals:           {label:'hBN-vdW',T1:60,eta:3.0,TLS:1.8,J:0.13,h:0.07,nm:1.5,Gf:-254,Hmix:-35,trapEv:0.13,conf:'speculative',ref:'hBN vdW'},
+};
+
+const DOPANTS = {
+  none:{label:'none',tls:0.00,bias:0.0,Jmod:0.00,pct:0,Hmix_add:0,ref:'pure host'},
+  nitrogen:{label:'N',tls:0.40,bias:0.20,Jmod:0.05,pct:12,Hmix_add:-8,ref:'Shim 2024 PRB'},
+  fluorine:{label:'F',tls:0.55,bias:0.10,Jmod:0.04,pct:8,Hmix_add:-12,ref:'Gordon 2022'},
+  erbium:{label:'Er',tls:0.30,bias:0.15,Jmod:0.03,pct:6,Hmix_add:-6,ref:'Fritz 2023 APL'},
+  yttrium:{label:'Y',tls:0.25,bias:0.12,Jmod:0.03,pct:5,Hmix_add:-5,ref:'Rare earth'},
+  lanthanum:{label:'La',tls:0.20,bias:0.10,Jmod:0.02,pct:4,Hmix_add:-4,ref:'Rare earth'},
+  hydrogen:{label:'H',tls:0.20,bias:0.05,Jmod:0.02,pct:5,Hmix_add:-3,ref:'de Graaf 2018'},
+  silicon_dop:{label:'Si',tls:-0.10,bias:0.00,Jmod:0.01,pct:3,Hmix_add:+2,ref:'Increases disorder'},
+  titanium_dop:{label:'Ti',tls:0.05,bias:0.05,Jmod:0.02,pct:4,Hmix_add:-2,ref:'Structural'},
+  oxygen_dop:{label:'O',tls:0.10,bias:0.00,Jmod:0.01,pct:8,Hmix_add:-1,ref:'Stoichiometry'},
+  carbon:{label:'C',tls:-0.10,bias:0.00,Jmod:0.00,pct:3,Hmix_add:+4,ref:'Increases TLS'},
+  sulfur:{label:'S',tls:-0.15,bias:0.00,Jmod:0.00,pct:2,Hmix_add:+5,ref:'Increases TLS'},
+};
+
+// thresholds from code_preferences.json (per-gate threshold)
+const QEC_CODES = {
+  surface:{label:'Surface',th:0.010,cy:1.0,bp:'agnostic',ref:'Fowler 2012'},
+  rotated_surface:{label:'Rotated surface',th:0.010,cy:1.1,bp:'agnostic',ref:'Google Willow'},
+  toric:{label:'Toric',th:0.010,cy:1.0,bp:'agnostic',ref:'Kitaev 1997'},
+  surface_17:{label:'Surface-17',th:0.010,cy:1.0,bp:'agnostic',ref:'Tomita 2014'},
+  xysurface:{label:'XY surface',th:0.018,cy:1.0,bp:'low',ref:'Tuckett 2020'},
+  clifford_deformed:{label:'Clifford-def',th:0.011,cy:1.0,bp:'agnostic',ref:'Dua 2024'},
+  xzzx:{label:'XZZX',th:0.030,cy:1.0,bp:'high',ref:'Bonilla Ataides 2021'},
+  xzzx_713:{label:'XZZX [7,1,3]',th:0.025,cy:1.0,bp:'high',ref:'Small XZZX'},
+  quantum_repetition:{label:'Repetition',th:0.030,cy:0.5,bp:'extreme',ref:'1D — bit-flip only'},
+  color:{label:'2D color',th:0.003,cy:1.2,bp:'low',ref:'Bombin 2006'},
+  triangular_color:{label:'Tri color',th:0.003,cy:1.2,bp:'low',ref:'Bombin 2007'},
+  color_488:{label:'Color 4.8.8',th:0.0035,cy:1.2,bp:'low',ref:'Square-octagon'},
+  heavy_hex:{label:'Heavy-Hex',th:0.0045,cy:1.0,bp:'agnostic',ref:'Chamberland 2020'},
+  bacon_shor:{label:'Bacon-Shor',th:0.002,cy:0.8,bp:'high',ref:'Aliferis 2007'},
+  shor_nine:{label:'Shor [9,1,3]',th:0.0001,cy:0.7,bp:'agnostic',ref:'Shor 1995'},
+  steane:{label:'Steane [7,1,3]',th:0.0001,cy:0.7,bp:'agnostic',ref:'Steane 1996'},
+};
+
+// ════════════════════════════════════════════════════════════════════
+// PHYSICS — calibrated so pass/fail is REAL
+// ════════════════════════════════════════════════════════════════════
+
+function buildJmat(N,J){
+  const n=N*N,m=new Float32Array(n*n);
+  for(let i=0;i<N;i++)for(let j=0;j<N;j++){const s=i*N+j;
+    if(j+1<N){const nb=i*N+(j+1);m[s*n+nb]=J;m[nb*n+s]=J;}
+    if(i+1<N){const nb=(i+1)*N+j;m[s*n+nb]=J;m[nb*n+s]=J;}}
+  return m;
+}
+
+function computeTLS(grid,N,matKey,dopKey){
+  const dop=DOPANTS[dopKey];
+  const sup=Math.max(-0.5,1-dop.tls*0.8);
+  let tls=0;
+  for(let i=0;i<N;i++)for(let j=0;j<N;j++){
+    if(!grid[i*N+j])continue;
+    let nb=0;
+    if(i>0&&grid[(i-1)*N+j])nb++;
+    if(i<N-1&&grid[(i+1)*N+j])nb++;
+    if(j>0&&grid[i*N+(j-1)])nb++;
+    if(j<N-1&&grid[i*N+(j+1)])nb++;
+    if(nb===0)tls+=0.22;else if(nb===1)tls+=0.06;else if(nb===2)tls+=0.03;else if(nb===3)tls+=0.09;else tls+=0.18;
+  }
+  return Math.max(0.01,tls*sup);
+}
+
+// Predict T1 from doping — anchored to material base T1
+// Best doping recovers near base T1; bad doping degrades it sharply
+function predictT1(tls,matKey,dopKey,freqGHz){
+  const mat=MATERIALS[matKey];
+  const baseTLS=mat.TLS;
+  // tlsRatio: 1.0 = baseline. <1 better, >1 worse
+  const tlsRatio=tls/(baseTLS*0.4+0.001);
+  // T1 scales inversely with TLS: T1 = base / tlsRatio^0.8, capped at 1.3× base
+  const T1=mat.T1/Math.pow(Math.max(tlsRatio,0.3),0.8);
+  return Math.min(Math.max(T1,0.5),mat.T1*1.3);
+}
+
+// THE KEY FUNCTION — total per-cycle error vs threshold
+// idle_error = cycle_time / T1  (T1 decay during the cycle)
+// gate_error = irreducible floor + material-dependent contribution
+// total must be < threshold for PASS
+function perCycleError(T1,matKey,dopKey,codeKey){
+  const c=QEC_CODES[codeKey];
+  const mat=MATERIALS[matKey];
+  // Idle error from T1 decay over one syndrome cycle
+  const idleErr=c.cy/T1;
+  // Gate error floor — even perfect T1 has gate errors (Willow: CZ ~0.3%)
+  const gateErr=GATE_ERROR_FLOOR*(1+mat.TLS*0.3);
+  return idleErr+gateErr;
+}
+
+function reqT1(codeKey,dist){
+  const c=QEC_CODES[codeKey];
+  // To pass: idle_error + gate_error < threshold
+  // → cycle/T1 < threshold - gate_floor
+  // → T1 > cycle / (threshold - gate_floor)
+  const headroom=c.th-GATE_ERROR_FLOOR;
+  if(headroom<=0) return Infinity; // threshold below gate floor — impossible
+  // distance factor: higher d needs more margin below threshold
+  const distFactor=1+0.1*dist;
+  return (c.cy/headroom)*distFactor;
+}
+
+function qecScore(T1,eta,matKey,dopKey,codeKey){
+  const c=QEC_CODES[codeKey];
+  const err=perCycleError(T1,matKey,dopKey,codeKey);
+  const ratio=err/c.th;
+  // Score: 1 when err << threshold, drops sharply crossing threshold
+  let coh;
+  if(ratio<=0.3)coh=1.0;
+  else if(ratio<=0.7)coh=1.0-0.4*(ratio-0.3)/0.4;
+  else if(ratio<=1.0)coh=0.6-0.55*(ratio-0.7)/0.3;
+  else coh=0.05*Math.exp(-(ratio-1.0)*3);
+  // bias matching
+  let bias;
+  if(c.bp==='agnostic')bias=0.65;
+  else if(c.bp==='high')bias=1/(1+Math.exp(-(eta-4)/1.5));
+  else if(c.bp==='extreme')bias=1/(1+Math.exp(-(eta-20)/5));
+  else bias=1/(1+Math.exp((eta-3)/1.5));
+  return Math.sqrt(Math.max(0,coh)*Math.max(0,bias));
+}
+
+function computeGibbs(matKey,dopKey,alpha){
+  const mat=MATERIALS[matKey],dop=DOPANTS[dopKey],R=8.314;
+  const Hmix=(mat.Hmix+dop.Hmix_add)*alpha*(1-alpha);
+  let Smix=0;if(alpha>0&&alpha<1)Smix=-R*(alpha*Math.log(alpha)+(1-alpha)*Math.log(1-alpha));
+  const Gmix=mat.Gf+Hmix-(0.015*Smix);
+  return{Gf:mat.Gf,Hmix:Hmix.toFixed(1),Gmix:Gmix.toFixed(1),stable:mat.Gf<-200};
+}
+
+function checkNode(grid,N,i,j,matKey,dopKey){
+  if(!grid[i*N+j])return'undoped';
+  const mat=MATERIALS[matKey],dop=DOPANTS[dopKey];
+  let nb=0;
+  if(i>0&&grid[(i-1)*N+j])nb++;
+  if(i<N-1&&grid[(i+1)*N+j])nb++;
+  if(j>0&&grid[i*N+(j-1)])nb++;
+  if(j<N-1&&grid[i*N+(j+1)])nb++;
+  const localTLS=nb===0?0.22:nb<=2?0.04:nb>=4?0.18:0.07;
+  const suppressed=localTLS*Math.max(0.1,1-dop.tls*0.8);
+  const normalised=suppressed/(mat.TLS*0.3+0.001);
+  if(normalised<0.5)return'ok';
+  if(normalised<1.2)return'warn';
+  return'fail';
+}
+
+// ════════════════════════════════════════════════════════════════════
+// CHARTS
+// ════════════════════════════════════════════════════════════════════
+function drawChart(id,data,color,yMin,yMax,thrY){
+  const c=document.getElementById(id);if(!c)return;
+  const ctx=c.getContext('2d'),W=c.offsetWidth||300,H=c.offsetHeight||95;
+  c.width=W;c.height=H;ctx.clearRect(0,0,W,H);
+  if(data.length<2)return;
+  const p=8,cW=W-p*2,cH=H-p*2;
+  ctx.strokeStyle='#161616';ctx.lineWidth=0.5;
+  for(let i=0;i<=4;i++){const y=p+cH*i/4;ctx.beginPath();ctx.moveTo(p,y);ctx.lineTo(W-p,y);ctx.stroke();}
+  if(thrY!==undefined){
+    const ty=p+cH-((thrY-yMin)/(yMax-yMin||1))*cH;
+    ctx.setLineDash([3,3]);ctx.strokeStyle='rgba(192,57,43,.6)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(p,ty);ctx.lineTo(W-p,ty);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='rgba(192,57,43,.8)';ctx.font='7px JetBrains Mono';ctx.fillText('pass threshold',p+2,ty-2);
+  }
+  ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.lineJoin='round';
+  data.forEach((v,i)=>{const x=p+(i/(data.length-1))*cW,y=p+cH-((v-yMin)/(yMax-yMin||1))*cH;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+  ctx.stroke();
+  ctx.lineTo(p+cW,p+cH);ctx.lineTo(p,p+cH);ctx.closePath();ctx.fillStyle=color+'12';ctx.fill();
+  ctx.fillStyle=color;ctx.font='9px JetBrains Mono';ctx.fillText(data[data.length-1].toFixed(3),W-44,14);
+}
+
+// ════════════════════════════════════════════════════════════════════
+// LATTICE
+// ════════════════════════════════════════════════════════════════════
+function renderLattice(grid,N,matKey,dopKey,activeIdx){
+  const el=document.getElementById('lattice_grid');
+  el.style.gridTemplateColumns=`repeat(${N},1fr)`;
+  const dop=DOPANTS[dopKey],n=N*N,dopSites=new Set();
+  if(dopKey!=='none'){
+    const dp=[...Array(n).keys()].filter(i=>grid[i]===1);
+    const nd=Math.round(dp.length*dop.pct/100);
+    for(let i=0;i<nd&&i<dp.length;i++)dopSites.add(dp[i]);
+  }
+  el.innerHTML='';
+  for(let idx=0;idx<n;idx++){
+    const i=Math.floor(idx/N),j=idx%N;
+    const cell=document.createElement('div');cell.className='lc';
+    if(!grid[idx]){cell.classList.add('u');cell.textContent='·';}
+    else if(dopSites.has(idx)){
+      const st=checkNode(grid,N,i,j,matKey,dopKey);
+      if(st==='ok'){cell.classList.add('d-ok');cell.textContent='◆';}
+      else if(st==='fail'){cell.classList.add('d-fail');cell.textContent='✕';}
+      else{cell.classList.add('d-warn');cell.textContent='◈';}
+      const tip=document.createElement('div');tip.className='mos-tooltip';
+      let nb=0;[[-1,0],[1,0],[0,-1],[0,1]].forEach(([di,dj])=>{const ni=i+di,nj=j+dj;if(ni>=0&&ni<N&&nj>=0&&nj<N&&grid[ni*N+nj])nb++;});
+      tip.textContent=`(${i},${j}) nb=${nb} MOS:${st}`;cell.appendChild(tip);
+    }else{
+      cell.classList.add(idx===activeIdx?'active':'h');cell.textContent='●';
+    }
+    el.appendChild(cell);
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// UI
+// ════════════════════════════════════════════════════════════════════
+function onQubitChange(){
+  const k=document.getElementById('qubit_type').value,q=QUBITS[k];
+  const tc=['','#1D9E75','#BA7517','#7F77DD'];
+  document.getElementById('qubit_info').innerHTML=
+    `<span style="color:${tc[q.tier]}">Tier ${q.tier}</span> · <span style="color:var(--purple)">${q.users}</span><br/>
+    T1: ${q.T1[0]}–${q.T1[1]}μs · η: ${q.eta_base} · f: ${q.freq[0]}–${q.freq[1]}GHz<br/>${q.desc}<br/>
+    ${q.rec.length?'<br/>Codes: '+q.rec.map(c=>`<span class="rec-tag">${c}</span>`).join(' '):'<span class="warn-tag">⚠ limited</span>'}`;
+}
+function onMatChange(){
+  const k=document.getElementById('host_material').value,m=MATERIALS[k];
+  const dk=document.getElementById('dopant').value,dop=DOPANTS[dk];
+  // Show effective T1 estimate with this dopant
+  const effTLS=m.TLS*Math.max(0.2,1-dop.tls*0.8);
+  document.getElementById('mat_info').innerHTML=
+    `Base T1: <b>${m.T1}μs</b> · η: ${m.eta} · TLS: ${m.TLS}→${effTLS.toFixed(2)} w/${dop.label}<br/>
+    ΔGf: <b>${m.Gf} kJ/mol</b> ${m.Gf<-200?'✓ stable':'⚠'} · trap: ${m.trapEv}eV<br/>${m.conf} · ${m.ref}`;
+  document.getElementById('g_host').textContent=m.Gf+' kJ/mol';
+}
+function onQECChange(){
+  const k=document.getElementById('qec_code').value,c=QEC_CODES[k];
+  const dist=parseInt(document.getElementById('qec_distance').value)||5;
+  const rT1=reqT1(k,dist);
+  const bc={agnostic:'var(--text2)',low:'var(--purple)',high:'var(--orange)',extreme:'var(--red)'}[c.bp];
+  const rt1Str=rT1===Infinity?'∞ (impossible — th below gate floor)':rT1.toFixed(0)+'μs';
+  document.getElementById('qec_info').innerHTML=
+    `th: <b style="color:var(--green)">${(c.th*100).toFixed(3)}%</b> · cycle: ${c.cy}μs · bias: <b style="color:${bc}">${c.bp}</b><br/>
+    Required T1 at d=${dist}: <b style="color:var(--amber)">${rt1Str}</b> · ${c.ref}`;
+}
+function updateSearchSpace(){
+  const N=parseInt(document.getElementById('lattice_n').value)||5,exp=N*N;
+  const val=exp<=30?Math.pow(2,exp).toLocaleString():`10^${Math.floor(exp*Math.log10(2))}`;
+  document.getElementById('ss_current').innerHTML=`N=${N} → 2^${exp} = <span class="hi">${val}</span>`;
+  onQECChange();
+}
+
+// ════════════════════════════════════════════════════════════════════
+// MAIN
+// ════════════════════════════════════════════════════════════════════
+let running=false,stopFlag=false,bestGrid=null,scoreHist=[],gibbsHist=[],nodeStream=[];
+
+async function runOptimizer(){
+  if(running){stopFlag=true;return;}
+  const matKey=document.getElementById('host_material').value;
+  const dopKey=document.getElementById('dopant').value;
+  const codeKey=document.getElementById('qec_code').value;
+  const qKey=document.getElementById('qubit_type').value;
+  // Fallback defaults — empty fields must never break the simulation
+  const dist=parseInt(document.getElementById('qec_distance').value)||5;
+  const freq=parseFloat(document.getElementById('qubit_freq').value)||5.0;
+  const N=parseInt(document.getElementById('lattice_n').value)||5;
+  const nIter=parseInt(document.getElementById('n_iter').value)||1000;
+  const beta=parseFloat(document.getElementById('tsu_beta').value)||800;
+  // Write defaults back to the UI so the user sees them
+  document.getElementById('lattice_n').value=N;
+  document.getElementById('n_iter').value=nIter;
+  document.getElementById('tsu_beta').value=beta;
+  document.getElementById('qec_distance').value=dist;
+
+  const mat=MATERIALS[matKey],dop=DOPANTS[dopKey],qubit=QUBITS[qKey];
+  const J=mat.J+dop.Jmod,h=mat.h;
+  const c=QEC_CODES[codeKey];
+
+  running=true;stopFlag=false;scoreHist=[];gibbsHist=[];nodeStream=[];
+  const btn=document.getElementById('run_btn');btn.textContent='■ Stop TSU';btn.style.background='#333';
+
+  // Effective eta: qubit base scaled by material
+  const eta=qubit.eta_base*(mat.eta/3.0)+dop.bias;
+
+  let grid=new Uint8Array(N*N);
+  for(let i=0;i<grid.length;i++)grid[i]=Math.random()>.5?1:0;
+  const Jmat=buildJmat(N,J);
+
+  let bScore=0,bGrid=grid.slice(),bTLS=Infinity,bT1=0,bErr=1;
+  const BATCH=50,total=Math.ceil(nIter/BATCH);
+  let lastActiveIdx=-1;
+
+  for(let b=0;b<total;b++){
+    if(stopFlag)break;
+    const n=N*N,sites=[...Array(n).keys()].sort(()=>Math.random()-.5);
+    for(let ki=0;ki<BATCH;ki++){
+      const si=sites[ki%n];lastActiveIdx=si;
+      let nb=0;for(let k=0;k<n;k++)nb+=Jmat[si*n+k]*grid[k];
+      const de=(grid[si]?-1:1)*(-nb+h);
+      if(Math.random()<1/(1+Math.exp(beta*de)))grid[si]=1-grid[si];
+    }
+    const tls=computeTLS(grid,N,matKey,dopKey);
+    const T1=predictT1(tls,matKey,dopKey,freq);
+    const err=perCycleError(T1,matKey,dopKey,codeKey);
+    const score=qecScore(T1,eta,matKey,dopKey,codeKey);
+    const alpha=Array.from(grid).filter(x=>x).length/(N*N);
+    const G=computeGibbs(matKey,dopKey,alpha);
+    const Gval=parseFloat(G.Gmix);
+    scoreHist.push(score);gibbsHist.push(Gval);
+    if(score>bScore){bScore=score;bT1=T1;bTLS=tls;bGrid=grid.slice();bErr=err;}
+
+    const ai=Math.floor(lastActiveIdx/N),aj=lastActiveIdx%N;
+    const ns=checkNode(grid,N,ai,aj,matKey,dopKey);
+    if(grid[lastActiveIdx]){
+      nodeStream.unshift(`<span class="${ns==='ok'?'ns-ok':ns==='fail'?'ns-fail':'ns-pend'}">node(${ai},${aj}) doped → MOS:${ns}</span>`);
+      if(nodeStream.length>4)nodeStream.pop();
+      document.getElementById('node_stream').innerHTML=nodeStream.join('<br/>');
+    }
+
+    const pct=((b+1)/total*100).toFixed(0);
+    document.getElementById('progress_fill').style.width=pct+'%';
+    document.getElementById('iter_counter').textContent=`TSU iter ${(b+1)*BATCH}/${nIter} · err ${(err*100).toFixed(2)}% · th ${(c.th*100).toFixed(2)}%`;
+    renderLattice(grid,N,matKey,dopKey,lastActiveIdx);
+    drawChart('score_chart',scoreHist,'#7F77DD',0,1,0.5);
+    const gMin=Math.min(...gibbsHist),gMax=Math.max(...gibbsHist,gMin+1);
+    drawChart('gibbs_chart',gibbsHist,'#BA7517',gMin,gMax);
+    document.getElementById('g_host').textContent=G.Gf+' kJ/mol';
+    document.getElementById('g_mix').textContent=G.Hmix+' kJ/mol';
+    document.getElementById('g_stable').innerHTML=G.stable?'<span style="color:var(--green)">✓ stable</span>':'<span style="color:var(--red)">⚠ marginal</span>';
+    updateVerdict(bT1,err,score,matKey,dopKey,codeKey,dist);
+    await new Promise(r=>setTimeout(r,0));
+  }
+
+  bestGrid=bGrid;
+  renderLattice(bestGrid,N,matKey,dopKey,-1);
+  const finalErr=perCycleError(bT1,matKey,dopKey,codeKey);
+  updateVerdict(bT1,finalErr,bScore,matKey,dopKey,codeKey,dist);
+  updateOutput(bT1,finalErr,eta,bTLS,bScore,matKey,dopKey,codeKey,dist,N,qKey);
+
+  const pass=finalErr<c.th;
+  document.getElementById('progress_fill').style.width='100%';
+  document.getElementById('iter_counter').textContent=`TSU complete · ${pass?'PASS ✓':'FAIL ✗'} · err ${(finalErr*100).toFixed(2)}% vs th ${(c.th*100).toFixed(2)}%`;
+  btn.textContent='▶ Run TSU optimizer';btn.style.background='';running=false;stopFlag=false;
+}
+
+function updateVerdict(T1,err,score,matKey,dopKey,codeKey,dist){
+  const c=QEC_CODES[codeKey];
+  const pass=err<c.th;
+  const margin=c.th/err; // >1 means below threshold = good
+  const vt=document.getElementById('verdict_text'),vs=document.getElementById('verdict_stats');
+  let cls='fail',txt='FAIL ✗';
+  if(pass&&margin>=2.0){cls='pass';txt='PASS ✓';}
+  else if(pass){cls='marginal';txt='MARGINAL ~';}
+  vt.className='verdict-big '+cls;vt.textContent=txt;
+  const pc=pass?'pv':'fv';
+  vs.innerHTML=`<span class="hl">err/cycle</span>=${(err*100).toFixed(2)}% <span class="${pc}">${pass?'✓':'✗'}</span><br/>
+    threshold ${(c.th*100).toFixed(2)}% · <span class="${pc}">${margin.toFixed(2)}× margin</span><br/>
+    T1=${T1.toFixed(1)}μs · ${c.label} d=${dist}<br/>score <span class="hl">${score.toFixed(3)}</span>`;
+}
+
+function updateOutput(T1,err,eta,tls,score,matKey,dopKey,codeKey,dist,N,qKey){
+  const mat=MATERIALS[matKey],dop=DOPANTS[dopKey],code=QEC_CODES[codeKey],qubit=QUBITS[qKey];
+  const pass=err<code.th;
+  const margin=code.th/err;
+  const alpha=bestGrid?Array.from(bestGrid).filter(x=>x).length/(N*N):0.5;
+  const G=computeGibbs(matKey,dopKey,alpha);
+  const ok=v=>`<span class="ok">${v} ✓</span>`,nok=v=>`<span class="nok">${v} ✗</span>`;
+  let nP=0,nT=0;
+  if(bestGrid)for(let i=0;i<N;i++)for(let j=0;j<N;j++)if(bestGrid[i*N+j]){nT++;if(checkNode(bestGrid,N,i,j,matKey,dopKey)==='ok')nP++;}
+  const nr=nT>0?((nP/nT)*100).toFixed(0)+'%':'—';
+
+  document.getElementById('out_t1').innerHTML=pass?ok(T1.toFixed(1)+' μs'):nok(T1.toFixed(1)+' μs');
+  document.getElementById('out_idle').innerHTML=pass?ok((err*100).toFixed(2)+'%'):nok((err*100).toFixed(2)+'%');
+  document.getElementById('out_thr').textContent=(code.th*100).toFixed(2)+'%';
+  document.getElementById('out_margin').innerHTML=margin>=1?ok(margin.toFixed(2)+'×'):nok(margin.toFixed(2)+'×');
+  document.getElementById('out_gibbs').innerHTML=G.stable?ok(G.Gf):nok(G.Gf);
+  document.getElementById('out_tls').textContent=tls.toFixed(3);
+  document.getElementById('out_nodes').innerHTML=nP===nT&&nT>0?ok(nr):`<span class="nok">${nr}</span>`;
+  document.getElementById('out_qec').innerHTML=pass?ok(code.label):nok(code.label);
+
+  const n2=dopKey!=='none'?(dop.pct*0.8).toFixed(1):'0';
+  const anneal=matKey.includes('niobium')?500:350;
+  let failReason='';
+  if(!pass){
+    if(reqT1(codeKey,dist)===Infinity) failReason=`<br/><span style="color:var(--red)">✗ FAIL: ${code.label} threshold ${(code.th*100).toFixed(2)}% is below the gate-error floor ${(GATE_ERROR_FLOOR*100).toFixed(2)}% — no material can pass this code.</span>`;
+    else if(T1<reqT1(codeKey,dist)) failReason=`<br/><span style="color:var(--red)">✗ FAIL: T1=${T1.toFixed(0)}μs &lt; required ${reqT1(codeKey,dist).toFixed(0)}μs. Idle error ${(code.cy/T1*100).toFixed(2)}% exceeds budget. Try a longer-T1 material (α-Ta, AlOx) or a higher-threshold code (XZZX).</span>`;
+    else failReason=`<br/><span style="color:var(--red)">✗ FAIL: bias mismatch — η=${eta.toFixed(1)} unsuitable for ${code.bp} code. Try matching qubit type to code.</span>`;
+  }
+  document.getElementById('fab_recipe').innerHTML=
+    `<span>${pass?'Fabrication recipe':'Diagnosis'}</span> — calibrated to Willow 2024 (T1=68μs ref)${pass?` · Ambegaokar-Baratoff 1963`:''}<br/>
+    Junction: <span>${mat.label} ${mat.nm}nm</span>${dopKey!=='none'?` + <span>${dop.label} ${dop.pct}%</span> · ${dop.ref}`:''} · anneal ${anneal}°C<br/>
+    ΔGf: <span>${G.Gf} kJ/mol</span> ${G.stable?'(stable ✓)':'(marginal ⚠)'} · Qubit: <span>${qubit.label}</span> T${qubit.tier}${failReason}`;
+}
+
+window.addEventListener('load',()=>{
+  onQubitChange();onQECChange();onMatChange();
+  const N=parseInt(document.getElementById('lattice_n').value);
+  const g=new Uint8Array(N*N);for(let i=0;i<g.length;i++)g[i]=Math.random()>.5?1:0;
+  renderLattice(g,N,'aluminum_oxide_dolan','none',-1);
+  window.addEventListener('resize',()=>{
+    drawChart('score_chart',scoreHist,'#7F77DD',0,1,0.5);
+    if(gibbsHist.length){const gm=Math.min(...gibbsHist),gx=Math.max(...gibbsHist,gm+1);drawChart('gibbs_chart',gibbsHist,'#BA7517',gm,gx);}
+  });
+  document.getElementById('qec_distance').addEventListener('change',onQECChange);
+});
+</script>
+</body>
+</html>
