@@ -304,25 +304,20 @@ export default function Anatomy() {
             </div>
           </div>
 
-          {/* The takeaway — layers 03–05 are the Josephson junction, layer 04 is its core */}
+          {/* The takeaway — Layer 3 today, all layers in time */}
           <div className="mt-16 glass rounded-2xl p-8 border-primary/20">
             <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-primary mb-3">
               what arqitec does with this stack
             </div>
             <div className="font-display text-2xl font-bold text-foreground max-w-3xl">
-              The whole engine designs the <span className="gradient-text">Josephson junction</span> — layers 03, 04, and 05 — where the qubit's frequency, fidelity, and bias are decided.
+              For now, the engine designs <span className="gradient-text">Layer 3 — the Josephson junction base</span>. The same engine runs against any layer in the stack as we extend the scope.
             </div>
             <p className="font-body text-muted-foreground mt-4 leading-relaxed max-w-3xl">
-              The other four layers are mostly chosen from a catalogue. The junction sandwich —
-              base electrode, tunnel barrier, top electrode — is where sub-nm thickness
-              uniformity, doping placement, and deposition parameters compound into the noise
-              budget your QEC code has to live inside.
+              Layer 3 is where today's noise budget is decided — Cooper pairs in, a clean Al
+              electrode with a well-behaved native oxide. The THRML sampler, the GNN refinement,
+              and the EM validator are layer-agnostic by design: turn the same loop on Layer 2,
+              Layer 4, or the substrate and it optimizes the fab spec there too.
             </p>
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <JJTile n="03" label="JJ base electrode"  detail="Cooper pairs in · clean Al, well-behaved native oxide" />
-              <JJTile n="04" label="Tunnel barrier"     detail="The Josephson junction itself · 1–2 nm AlOₓ" highlight />
-              <JJTile n="05" label="JJ top electrode"   detail="Other side of the junction · same purity demands" />
-            </div>
           </div>
         </div>
       </div>
@@ -330,24 +325,3 @@ export default function Anatomy() {
   );
 }
 
-function JJTile({ n, label, detail, highlight = false }) {
-  return (
-    <div
-      className={`rounded-xl px-4 py-3 border ${
-        highlight
-          ? 'border-primary/50 bg-primary/[0.07]'
-          : 'border-border/50 bg-background/40'
-      }`}
-    >
-      <div className="flex items-baseline gap-2">
-        <span className={`font-mono text-[11px] tracking-[0.22em] ${highlight ? 'text-primary' : 'text-muted-foreground'}`}>
-          {n}
-        </span>
-        <span className="font-display text-sm font-semibold text-foreground">{label}</span>
-      </div>
-      <div className="font-mono text-[11px] text-muted-foreground mt-1.5 leading-snug">
-        {detail}
-      </div>
-    </div>
-  );
-}
