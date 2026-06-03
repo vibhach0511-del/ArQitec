@@ -262,7 +262,7 @@ export default function Design() {
               <div className="rounded-xl overflow-hidden border border-border/60 bg-background">
                 <iframe
                   ref={iframeRef}
-                  src="/junction_doping_optimizer_v2.html"
+                  src={`/junction_doping_optimizer_v2.html?v=3&t=${Date.now()}`}
                   title="Junction Doping Optimizer"
                   className="w-full"
                   style={{ height: '85vh', border: 0, display: 'block' }}
