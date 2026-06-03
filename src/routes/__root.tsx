@@ -81,7 +81,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "QEC recommendation engine for superconducting quantum chips. Recommends optimal error-correction codes and ranks material stacks from noise profile to fabrication targets." },
       { name: "author", content: "ArQiteQ" },
       { property: "og:title", content: "ArQiteQ — QEC Recommendation Engine" },
-      { property: "og:description", content: "Given a material noise profile, ArQiteQ recommends the optimal QEC code and ranks Layer 2 material stacks across thousands of combinations." },
+      { property: "og:description", content: "Given a material noise profile, ArQiteQ recommends the optimal QEC code and ranks Layer 3 (Josephson junction) material stacks across thousands of combinations." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
