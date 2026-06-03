@@ -5,9 +5,11 @@ import Navbar from '@/components/Navbar';
 
 const QEC_CODES = ['Surface Code', 'Toric Code', 'Floquet Code', 'Repetition Code', 'Color Code'];
 const ERROR_RATES = ['10⁻³', '10⁻⁴', '10⁻⁵', '10⁻⁶', '10⁻⁷'];
+const QUBIT_TYPES = ['Transmon', 'Fluxonium', 'Cat qubit'];
+const ALGORITHMS = ['VQE 10 electrons', 'Shor RSA-2048', 'Quantum simulation', 'Custom'];
 
 export default function Design() {
-  const [form, setForm] = useState({ code: '', errorRate: '', qubits: '', notes: '' });
+  const [form, setForm] = useState({ code: '', errorRate: '', qubits: '', qubitType: 'Transmon', targetAlgorithm: 'VQE 10 electrons', notes: '' });
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -108,6 +110,50 @@ export default function Design() {
                 />
               </div>
 
+              {/* Qubit type */}
+              <div className="glass rounded-2xl p-6">
+                <label className="block font-mono text-xs text-primary tracking-widest uppercase mb-4">
+                  Qubit Type
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  {QUBIT_TYPES.map(t => (
+                    <button
+                      key={t} type="button"
+                      onClick={() => setForm(f => ({ ...f, qubitType: t }))}
+                      className={`px-4 py-3 rounded-xl border text-sm font-medium font-body transition-all duration-200 text-center ${
+                        form.qubitType === t
+                          ? 'border-primary bg-primary/10 text-primary glow-cyan'
+                          : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Target algorithm */}
+              <div className="glass rounded-2xl p-6">
+                <label className="block font-mono text-xs text-primary tracking-widest uppercase mb-4">
+                  Target Algorithm
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {ALGORITHMS.map(a => (
+                    <button
+                      key={a} type="button"
+                      onClick={() => setForm(f => ({ ...f, targetAlgorithm: a }))}
+                      className={`px-3 py-3 rounded-xl border text-sm font-medium font-body transition-all duration-200 text-center ${
+                        form.targetAlgorithm === a
+                          ? 'border-primary bg-primary/10 text-primary glow-cyan'
+                          : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                      }`}
+                    >
+                      {a}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Notes */}
               <div className="glass rounded-2xl p-6">
                 <label className="block font-mono text-xs text-primary tracking-widest uppercase mb-4">
@@ -158,7 +204,7 @@ export default function Design() {
                 Estimated delivery: &lt;48 hours · Results via email
               </p>
               <button
-                onClick={() => { setSubmitted(false); setForm({ code: '', errorRate: '', qubits: '', notes: '' }); }}
+                onClick={() => { setSubmitted(false); setForm({ code: '', errorRate: '', qubits: '', qubitType: 'Transmon', targetAlgorithm: 'VQE 10 electrons', notes: '' }); }}
                 className="mt-8 px-6 py-3 rounded-xl border border-border text-sm text-muted-foreground hover:border-primary/40 hover:text-primary transition-all"
               >
                 Start another design
