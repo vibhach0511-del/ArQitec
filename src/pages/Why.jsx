@@ -6,23 +6,33 @@ import Navbar from '@/components/Navbar';
 const steps = [
   {
     num: '01',
-    title: 'Select your QEC code',
-    desc: 'Choose from Surface, Toric, Floquet, or any major QEC architecture. ArQitec understands each code\'s unique error model and threshold behaviour.',
+    title: 'Derive the noise budget',
+    desc: 'From (code, distance d, target logical error pL), invert the threshold formula to back out the required physical-gate error. Translate it into per-axis floors: T1 > 150 μs, T2 > 80 μs, η > 10, gate fidelity > 99.5%.',
   },
   {
     num: '02',
-    title: 'Set your logical error rate',
-    desc: 'Define the target logical error rate for your computation. This drives the entire material optimization — from T1/T2 budgets down to interface quality.',
+    title: 'Map noise budget → material constraints',
+    desc: 'For each role in the stack, search the materials catalogue for combinations that meet each threshold. Which junction barrier thickness hits T1 > 150 μs? Which doping profile gives η > 10? Which film material lands fidelity > 99.5%?',
   },
   {
     num: '03',
-    title: 'Inverse material solve',
-    desc: 'Our physics engine back-propagates through the device model, solving for the superconductor doping, deposition thickness, and annealing profile that satisfies your constraints.',
+    title: 'THRML Gibbs samples the junction lattice',
+    desc: 'A thermal Monte Carlo sweep over the 5×5 doping configuration space. Each accepted move is a candidate dopant placement that the constraint check, run online, finds plausible.',
   },
   {
     num: '04',
-    title: 'Receive the fab spec',
-    desc: 'Get a complete, fab-ready document: material stack, deposition parameters, predicted T1 / T2 / η, and a checklist for your foundry partner.',
+    title: 'Equivariant GNN refines the doping profile',
+    desc: 'A graph neural network conditioned on the noise budget (not the QEC score) takes a candidate and predicts (T1, T2, η). Refines toward configurations that hit every constraint simultaneously.',
+  },
+  {
+    num: '05',
+    title: '3D EM mesh validates the geometry',
+    desc: 'High-fidelity electromagnetic simulation on the realised geometry checks whether the predicted T1 / T2 actually appear. The heavy step — runs only on converged candidates to confirm them.',
+  },
+  {
+    num: '06',
+    title: 'Iterate until every constraint is green',
+    desc: 'Steps 03 → 05 in a loop. Each iteration streams the updated 5×5 heatmap and running margins. When everything passes, output the fabrication recipe: barrier thickness, N₂ partial pressure, deposition parameters.',
   },
 ];
 
