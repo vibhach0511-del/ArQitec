@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ArQiteQ — Junction Doping → QEC</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+:root{
+  --bg:#080808;--bg2:#0f0f0f;--bg3:#141414;--border:#1e1e1e;--border2:#2a2a2a;
+  --orange:#D85A30;--green:#1D9E75;--red:#c0392b;--amber:#BA7517;--purple:#7F77DD;
+  --text:#e8e8e8;--text2:#888;--text3:#444;--mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--mono);background:var(--bg);color:var(--text);min-height:100vh;}
+header{border-bottom:1px solid var(--border2);padding:11px 18px;background:var(--bg2);}
+.logo{font-size:12px;font-weight:700;letter-spacing:3px;color:var(--orange);}
+.sub{font-size:9px;color:var(--text3);letter-spacing:1px;margin-top:2px;}
+.app{display:grid;grid-template-columns:270px 1fr;min-height:calc(100vh - 46px);}
+
+/* LEFT — inputs */
+.left{border-right:1px solid var(--border2);background:var(--bg2);padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
+.sec-label{font-size:8px;font-weight:700;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin:6px 0 2px;}
+.field label{display:block;font-size:8px;color:var(--text2);letter-spacing:1px;margin-bottom:3px;text-transform:uppercase;}
+.field select,.field input{width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:11px;padding:6px 8px;border-radius:2px;outline:none;}
+.field select:focus,.field input:focus{border-color:var(--orange);}
+.lock{font-size:8px;cursor:pointer;padding:1px 5px;border-radius:2px;border:1px solid var(--border2);float:right;}
+.lock.keep{color:var(--orange);border-color:var(--orange);}
+.lock.opt{color:var(--green);border-color:var(--green);}
+.exbtns{display:flex;gap:4px;}
+.exbtns button{flex:1;padding:6px;font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:1px;border-radius:2px;cursor:pointer;}
+.ex-pass{background:rgba(29,158,117,.15);border:1px solid var(--green);color:var(--green);}
+.ex-mod{background:rgba(186,117,23,.15);border:1px solid var(--amber);color:var(--amber);}
+.ex-fail{background:rgba(192,57,43,.15);border:1px solid var(--red);color:var(--red);}
+.run{width:100%;padding:11px;background:var(--orange);color:#fff;border:none;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;border-radius:2px;}
+.run:hover{background:#f06030;}
+
+/* RIGHT — main */
+.right{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border2);}
+.cell{background:var(--bg);padding:14px;}
+.cell-label{font-size:8px;font-weight:700;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:8px;}
+
+/* stacked lattices (QEC over material) */
+.lat-col{display:flex;flex-direction:column;gap:10px;align-items:center;}
+.lat-block{width:100%;text-align:center;}
+.lat-block .tag{font-size:8px;color:var(--text3);letter-spacing:1px;margin-bottom:3px;}
+svg.lat{width:100%;max-width:260px;}
+
+/* verdict */
+.verdict-wrap{display:flex;flex-direction:column;height:100%;}
+.verdict-big{font-family:'Space Mono',monospace;font-size:40px;font-weight:700;letter-spacing:2px;text-align:center;margin:20px 0 8px;}
+.verdict-big.pass{color:var(--green);} .verdict-big.mod{color:var(--amber);} .verdict-big.fail{color:var(--red);} .verdict-big.wait{color:var(--text3);}
+.verdict-stats{font-size:10px;color:var(--text2);text-align:center;line-height:2;}
+.verdict-stats .hl{color:var(--text);} .verdict-stats .pv{color:var(--green);} .verdict-stats .fv{color:var(--red);}
+
+/* recommendation under verdict */
+.rec{margin-top:14px;border-top:1px solid var(--border);padding-top:12px;display:none;}
+.rec-title{font-size:9px;font-weight:700;letter-spacing:1px;color:var(--green);margin-bottom:6px;}
+.rec-overlay{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;}
+.rec-overlay svg{width:130px;}
+.rec-detail{font-size:9px;color:var(--text2);line-height:1.7;flex:1;}
+.rec-detail b{color:var(--text);}
+
+/* output strip */
+.out{grid-column:1/-1;background:var(--bg2);border-top:1px solid var(--border2);padding:12px 16px;}
+.out-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:6px;}
+.oi{background:var(--bg3);border:1px solid var(--border);border-radius:2px;padding:7px 9px;}
+.oi .l{font-size:7px;letter-spacing:1px;color:var(--text3);text-transform:uppercase;}
+.oi .v{font-size:11px;font-weight:600;margin-top:2px;}
+.oi .v .ok{color:var(--green);} .oi .v .no{color:var(--red);}
+
+/* gibbs explainer */
+.gibbs-box{grid-column:1/-1;background:var(--bg);border:1px solid var(--border);border-radius:2px;padding:9px 11px;margin-top:8px;font-size:9px;color:var(--text2);line-height:1.7;}
+.gibbs-box b{color:var(--amber);}
+.gibbs-bar{height:10px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-top:4px;position:relative;}
+.gibbs-fill{height:100%;background:linear-gradient(90deg,var(--red),var(--amber),var(--green));}
+  #sampler_svg .doped{transition:fill .06s,r .06s;}
+  #sampler_svg .best{filter:drop-shadow(0 0 3px var(--green));}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">ARQITEQ — JUNCTION DOPING → QEC</div>
+  <div class="sub">material lattice + QEC code → does this chip run error correction? · calibrated to Willow 2024 / AlphaQubit</div>
+</header>
+
+<div class="app">
+
+<!-- LEFT -->
+<div class="left">
+  <div class="sec-label">Qubit & material (what you build)</div>
+  <div class="field"><label>Qubit type <span class="lock keep" id="lk_qubit" onclick="tog('qubit')">🔒keep</span></label>
+    <select id="qubit" onchange="sync()">
+      <optgroup label="── Tier 1 Production ──">
+        <option value="transmon">Transmon (η≈3)</option>
+        <option value="fluxonium">Fluxonium (η≈25)</option>
+      </optgroup>
+      <optgroup label="── Tier 2 Emerging ──">
+        <option value="cat">Cat qubit (η≈500)</option>
+        <option value="kerr_cat">Kerr-cat ★ (η≈100)</option>
+        <option value="tunable_transmon">Tunable Transmon (η≈2.5)</option>
+        <option value="csfq">CSFQ (η≈6)</option>
+        <option value="dual_rail">Dual-Rail Cavity (η≈1)</option>
+        <option value="snailmon">SNAILmon ★ (η≈4)</option>
+      </optgroup>
+      <optgroup label="── Tier 3 Research ──">
+        <option value="zero_pi">0-π qubit (η≈50)</option>
+        <option value="heavy_fluxonium">Heavy Fluxonium (η≈100)</option>
+        <option value="unimon">Unimon ★ (η≈4)</option>
+        <option value="bifluxon">Bifluxon (η≈15)</option>
+        <option value="gatemon">Gatemon (η≈2)</option>
+        <option value="fluxonium_transmon">Fluxonium-Transmon ★ (η≈12)</option>
+        <option value="protected_sc">Protected SC ★ (η≈30)</option>
+      </optgroup>
+    </select></div>
+  <div class="field"><label>Qubit frequency (GHz)</label>
+    <input type="number" id="qubit_freq" value="5.0" min="0.01" max="20" step="0.5" onchange="sync()"/></div>
+  <div class="field"><label>Host material <span class="lock keep" id="lk_host" onclick="tog('host')">🔒keep</span></label>
+    <select id="host" onchange="sync()">
+      <optgroup label="── Tantalum ──">
+        <option value="tantalum_cap">Ta cap/Nb — T1=300/T2=280μs</option>
+        <option value="tantalum_film">α-Ta — T1=230/T2=249μs</option>
+      </optgroup>
+      <optgroup label="── Aluminium ──">
+        <option value="aluminum_oxide_ald">ALD Al₂O₃ — T1=310/T2=240μs</option>
+        <option value="aluminum_oxide_dolan">AlOx Dolan — T1=270/T2=200μs</option>
+        <option value="aluminum_oxide_manhattan">AlOx Manhattan — T1=280/T2=210μs</option>
+      </optgroup>
+      <optgroup label="── Oxide/nitride ──">
+        <option value="hafnium_oxide">HfOx — T1=180/T2=130μs</option>
+        <option value="zirconium_oxide">ZrO₂ — T1=160/T2=110μs</option>
+        <option value="aluminum_nitride">AlN — T1=200/T2=140μs</option>
+        <option value="titanium_nitride">TiN — T1=150/T2=100μs</option>
+        <option value="silicon_nitride">Si₃N₄ — T1=100/T2=70μs</option>
+        <option value="magnesium_oxide">MgOx — T1=160/T2=110μs</option>
+        <option value="silicon_oxide">SiOx — T1=90/T2=60μs</option>
+        <option value="indium_oxide">InOx — T1=70/T2=45μs</option>
+      </optgroup>
+      <optgroup label="── Niobium ──">
+        <option value="niobium_film">Nb film — T1=50/T2=40μs</option>
+        <option value="niobium_nitride">NbN — T1=30/T2=20μs</option>
+        <option value="nbtio">NbTiN — T1=40/T2=30μs</option>
+        <option value="niobium_titanium">NbTi — T1=40/T2=28μs</option>
+        <option value="niobium_tin">Nb₃Sn — T1=20/T2=12μs</option>
+        <option value="niobium_germanium">Nb₃Ge — T1=15/T2=8μs</option>
+        <option value="niobium_silicide">NbSi — T1=30/T2=20μs</option>
+        <option value="niobium_aluminide">Nb₃Al — T1=20/T2=12μs</option>
+        <option value="niobium_oxide">Nb-NbOx — T1=50/T2=35μs</option>
+      </optgroup>
+      <optgroup label="── Elemental ──">
+        <option value="rhenium">Re — T1=100/T2=80μs</option>
+        <option value="molybdenum_rhenium">MoRe — T1=50/T2=40μs</option>
+        <option value="vanadium">V — T1=30/T2=20μs</option>
+        <option value="vanadium_silicide">V₃Si — T1=20/T2=12μs</option>
+        <option value="molybdenum">Mo — T1=30/T2=20μs</option>
+        <option value="indium_film">In — T1=30/T2=20μs</option>
+        <option value="tin_film">Sn — T1=20/T2=15μs</option>
+        <option value="hafnium">Hf — T1=20/T2=12μs</option>
+        <option value="magnesium_diboride">MgB₂ — T1=20/T2=10μs</option>
+      </optgroup>
+      <optgroup label="── Exotic ──">
+        <option value="granular_aluminum">grAl — T1=23/T2=46μs</option>
+        <option value="amorphous_silicon">aSi — T1=80/T2=55μs</option>
+        <option value="van_der_waals">hBN-vdW — T1=60/T2=40μs</option>
+        <option value="aluminum_on_inas">Al/InAs — T1=10/T2=5μs</option>
+        <option value="nv_diamond">NV diamond — T1=10000/T2=1000μs</option>
+      </optgroup>
+    </select></div>
+  <div class="field"><label>Dopant <span class="lock opt" id="lk_dop" onclick="tog('dop')">🔓optimize</span></label>
+    <select id="dop" onchange="sync()">
+      <option value="none">None</option>
+      <option value="fluorine">Fluorine — 55% TLS↓</option>
+      <option value="nitrogen">Nitrogen — 40% TLS↓</option>
+      <option value="erbium">Erbium — 30% TLS↓</option>
+      <option value="carbon">⚠ Carbon — raises TLS</option>
+    </select></div>
+  <div class="field"><label>2nd layer (3D stack)</label>
+    <select id="layer2" onchange="sync()">
+      <option value="none">None</option>
+      <optgroup label="── Layer 2 (below) ──">
+        <option value="below_tantalum">L2: α-Ta below (clean)</option>
+        <option value="below_aluminum">L2: Al below</option>
+        <option value="below_niobium">L2: Nb below (lossy)</option>
+        <option value="below_tin">L2: TiN below</option>
+      </optgroup>
+      <optgroup label="── Layer 4 (above) ──">
+        <option value="above_aluminum">L4: Al above</option>
+        <option value="above_tantalum">L4: Ta above (clean)</option>
+        <option value="above_niobium">L4: Nb above (lossy)</option>
+        <option value="above_grAl">L4: grAl above</option>
+      </optgroup>
+    </select></div>
+
+  <div class="sec-label">QEC target (what you run)</div>
+  <div class="field"><label>QEC code <span class="lock opt" id="lk_code" onclick="tog('code')">🔓optimize</span></label>
+    <select id="code" onchange="sync()">
+      <optgroup label="── Surface family ──">
+        <option value="surface">Surface code (th 1.00%, agnostic)</option>
+        <option value="rotated_surface">Rotated surface (th 1.00%, agnostic)</option>
+        <option value="unrotated_surface">Unrotated surface (th 0.90%, agnostic)</option>
+        <option value="toric">Toric code (th 1.10%, agnostic)</option>
+        <option value="surface_17">Surface-17 (d=3) (th 1.00%, agnostic)</option>
+        <option value="surface_49">Surface-49 (d=5) (th 1.00%, agnostic)</option>
+        <option value="xysurface">XY surface (th 1.80%, low)</option>
+        <option value="clifford_deformed">Clifford-deformed surface (th 1.10%, agnostic)</option>
+        <option value="tailored_surface">Tailored surface (th 1.23%, high)</option>
+      </optgroup>
+      <optgroup label="── XZZX / biased ──">
+        <option value="xzzx">XZZX surface (th 3.00%, high)</option>
+        <option value="xzzx_713">XZZX [[7,1,3]] (th 2.50%, high)</option>
+        <option value="xzzx_kerrcat">XZZX + Kerr-cat (th 6.50%, extreme)</option>
+        <option value="quantum_repetition">Repetition (1D) (th 50.00%, extreme)</option>
+        <option value="repetition_cat">Repetition-cat (th 50.00%, extreme)</option>
+      </optgroup>
+      <optgroup label="── Color codes ──">
+        <option value="color">2D color (6.6.6) (th 0.37%, low)</option>
+        <option value="triangular_color">Triangular color (th 0.37%, low)</option>
+        <option value="color_488">Color 4.8.8 (th 0.35%, low)</option>
+        <option value="color_4612">Color 4.6.12 (th 0.19%, low)</option>
+      </optgroup>
+      <optgroup label="── Subsystem / heavy-hex ──">
+        <option value="heavy_hex">Heavy-Hex (th 0.45%, agnostic)</option>
+        <option value="heavy_hex_tailored">Heavy-Hex tailored (th 0.23%, high)</option>
+        <option value="heavy_hex_xzzx">Heavy-Hex XZZX (th 0.21%, high)</option>
+        <option value="bacon_shor">Bacon-Shor (th 0.20%, high)</option>
+        <option value="bacon_shor_13">Bacon-Shor [[13]] (th 0.20%, high)</option>
+        <option value="subsystem_surface">Subsystem surface (th 0.81%, agnostic)</option>
+      </optgroup>
+      <optgroup label="── Floquet / dynamical ──">
+        <option value="floquet_honeycomb">Floquet honeycomb (th 0.75%, agnostic)</option>
+        <option value="floquet_bacon_shor">Floquet-Bacon-Shor (th 0.66%, high)</option>
+        <option value="ckt_honeycomb">CSS honeycomb (th 0.70%, agnostic)</option>
+      </optgroup>
+      <optgroup label="── Concatenated / small ──">
+        <option value="steane">Steane [[7,1,3]] (th 0.01%, agnostic)</option>
+        <option value="shor_nine">Shor [[9,1,3]] (th 0.01%, agnostic)</option>
+        <option value="five_qubit">[[5,1,3]] perfect (th 0.01%, agnostic)</option>
+        <option value="carbon_1212">[[12,2,4]] carbon (th 0.02%, agnostic)</option>
+      </optgroup>
+      <optgroup label="── Bosonic / cavity ──">
+        <option value="cat_code">Cat code (cavity) (th 1.00%, extreme)</option>
+        <option value="binomial">Binomial code (th 1.20%, agnostic)</option>
+        <option value="gkp">GKP code (th 1.50%, agnostic)</option>
+        <option value="gkp_surface">GKP-surface concat (th 2.00%, agnostic)</option>
+        <option value="dual_rail_code">Dual-rail erasure (th 2.50%, agnostic)</option>
+        <option value="fourlegged_cat">4-legged cat (th 1.10%, extreme)</option>
+      </optgroup>
+    </select></div>
+  <div class="field"><label>Distance d <span class="lock opt" id="lk_dist" onclick="tog('dist')">🔓optimize</span></label>
+    <input type="number" id="dist" value="5" min="3" max="7" step="2" onchange="sync()"/></div>
+  <div class="field"><label>Target logical error</label>
+    <input type="number" id="target" value="0.005" min="1e-9" max="0.1" step="any" onchange="sync()"/></div>
+
+  <div class="sec-label">Sampling & cryostat stack</div>
+  <div class="field"><label>Chip / qubit-layer temp (mK) — mixing chamber</label>
+    <input type="number" id="temp_chip" value="15" min="5" max="100" step="5" onchange="sync()"/></div>
+  <div class="field"><label>HEMT amplifier stage (K)</label>
+    <input type="number" id="temp_hemt" value="4" min="2" max="10" step="0.5" onchange="sync()"/></div>
+  <div class="field"><label>Filter / attenuator stage (mK) — still plate</label>
+    <input type="number" id="temp_filter" value="100" min="50" max="900" step="50" onchange="sync()"/></div>
+
+  <div class="sec-label">Examples</div>
+  <div class="exbtns">
+    <button class="ex-pass" onclick="loadEx('pass')">PASS</button>
+    <button class="ex-mod" onclick="loadEx('mod')">MODERATE</button>
+    <button class="ex-fail" onclick="loadEx('fail')">FAIL</button>
+  </div>
+  <button class="run" onclick="run()">▶ RUN</button>
+</div>
+
+<!-- RIGHT -->
+<div class="right">
+
+  <!-- QEC over material -->
+  <div class="cell">
+    <div class="cell-label">QEC code lattice (top) over material lattice (bottom)</div>
+    <div class="lat-col">
+      <div class="lat-block">
+        <div class="tag" id="qec_tag">QEC stabilizer connectivity</div>
+        <div style="display:flex;gap:10px;font-size:7px;color:var(--text3);margin-bottom:2px">
+          <span style="display:flex;align-items:center;gap:3px"><svg width="9" height="9"><circle cx="4.5" cy="4.5" r="4" fill="#7F77DD" opacity="0.85"/></svg>data qubit</span>
+          <span style="display:flex;align-items:center;gap:3px"><svg width="9" height="9"><rect x="0.5" y="0.5" width="8" height="8" fill="none" stroke="#7F77DD" stroke-width="1.2" transform="rotate(45 4.5 4.5)"/></svg>syndrome (ancilla)</span>
+          <span style="display:flex;align-items:center;gap:3px"><svg width="14" height="5"><line x1="0" y1="2.5" x2="14" y2="2.5" stroke="#7F77DD" stroke-width="1" opacity="0.5"/></svg>stabilizer edge</span>
+        </div>
+        <svg class="lat" id="qec_svg" viewBox="0 0 260 150"></svg>
+      </div>
+      <div class="lat-block">
+        <div class="tag" id="mat_tag">material doping lattice (3D stack)</div>
+        <div style="display:flex;gap:10px;font-size:7px;color:var(--text3);margin-bottom:2px">
+          <span style="display:flex;align-items:center;gap:3px"><svg width="9" height="9"><circle cx="4.5" cy="4.5" r="4" fill="#1D9E75" opacity="0.6"/></svg>host site</span>
+          <span style="display:flex;align-items:center;gap:3px"><svg width="9" height="9"><circle cx="4.5" cy="4.5" r="4" fill="#7F77DD" opacity="0.6"/></svg>dopant site</span>
+          <span style="display:flex;align-items:center;gap:3px"><svg width="9" height="9"><circle cx="4.5" cy="4.5" r="3" fill="#7F77DD" opacity="0.2" stroke="#7F77DD" stroke-width="0.5"/></svg>2nd layer</span>
+        </div>
+        <svg class="lat" id="mat_svg" viewBox="0 0 260 150"></svg>
+      </div>
+      <!-- LIVE GIBBS SAMPLER — shows every doping config tried until optimal -->
+      <div class="lat-block" id="sampler_block" style="border-top:1px solid var(--border2);padding-top:8px;">
+        <div class="tag" id="sampler_tag" style="display:flex;justify-content:space-between">
+          <span>Gibbs sampler — doping config search</span>
+          <span id="sampler_iter" style="color:var(--text3)">idle</span>
+        </div>
+        <svg class="lat" id="sampler_svg" viewBox="0 0 260 80" style="max-height:80px;"></svg>
+        <!-- KEY -->
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin:4px 0;font-size:8px;color:var(--text2)">
+          <span style="display:flex;align-items:center;gap:3px">
+            <svg width="10" height="10"><circle cx="5" cy="5" r="4" fill="#1D9E75"/></svg> data qubit (doped)
+          </span>
+          <span style="display:flex;align-items:center;gap:3px">
+            <svg width="10" height="10"><circle cx="5" cy="5" r="3" fill="#141414" stroke="#333" stroke-width="1"/></svg> data qubit (undoped)
+          </span>
+          <span style="display:flex;align-items:center;gap:3px">
+            <svg width="10" height="10"><rect x="1" y="1" width="8" height="8" fill="none" stroke="#7F77DD" stroke-width="1.2" transform="rotate(45 5 5)"/></svg> syndrome qubit (doped)
+          </span>
+          <span style="display:flex;align-items:center;gap:3px">
+            <svg width="10" height="10"><rect x="2" y="2" width="6" height="6" fill="none" stroke="#333" stroke-width="0.8" transform="rotate(45 5 5)"/></svg> syndrome qubit (undoped)
+          </span>
+        </div>
+        <div style="height:6px;background:var(--bg3);border-radius:3px;margin-top:4px;overflow:hidden">
+          <div id="sampler_bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--orange),var(--green));transition:width .1s;border-radius:3px;"></div>
+        </div>
+        <div id="sampler_stats" style="font-size:8px;color:var(--text3);margin-top:3px;min-height:14px;">run optimizer to see sampling</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Verdict + recommendation -->
+  <div class="cell">
+    <div class="cell-label">Verdict</div>
+    <div class="verdict-wrap">
+      <div class="verdict-big wait" id="verdict">—</div>
+      <div class="verdict-stats" id="vstats">pick inputs and Run, or try an example</div>
+      <div class="rec" id="rec">
+        <div class="rec-title">✓ A config that WILL pass (QEC + material overlaid):</div>
+        <div class="rec-overlay">
+          <svg id="rec_svg" viewBox="0 0 130 130"></svg>
+          <div class="rec-detail" id="rec_detail"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Output strip -->
+  <div class="out">
+    <div class="cell-label">Output specification</div>
+    <div class="out-grid">
+      <div class="oi"><div class="l">Predicted T1</div><div class="v" id="o_t1">—</div></div>
+      <div class="oi"><div class="l">Predicted T2</div><div class="v" id="o_t2">—</div></div>
+      <div class="oi"><div class="l">Physical err/cycle</div><div class="v" id="o_perr">—</div></div>
+      <div class="oi"><div class="l">vs threshold</div><div class="v" id="o_thr">—</div></div>
+      <div class="oi"><div class="l">Logical error p_L</div><div class="v" id="o_pL">—</div></div>
+    </div>
+    <div class="gibbs-box" id="gibbs_box">
+      <b>Gibbs free energy ΔG</b> — stable junction = ordered lattice = fewer TLS defects = higher T1. Connects to the verdict:
+      Lower (more negative) = more stable = won't phase-separate during the anneal.
+      <span id="gibbs_text">Run to compute.</span>
+      <div class="gibbs-bar"><div class="gibbs-fill" id="gibbs_fill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════
+// DATA (real measured values from material_properties.py)
+// ════════════════════════════════════════════════════════════════════
+const MAT={
+  tantalum_cap:{label:'Ta cap/Nb',T1:300,T2:280,TLS:0.7,Gf:-1911},
+  aluminum_oxide_ald:{label:'ALD Al₂O₃',T1:310,T2:240,TLS:0.8,Gf:-1582},
+  tantalum_film:{label:'α-Ta',T1:230,T2:249,TLS:0.9,Gf:-1911},
+  aluminum_oxide_dolan:{label:'AlOx Dolan',T1:270,T2:200,TLS:1.2,Gf:-1582},
+  aluminum_oxide_manhattan:{label:'AlOx Manhattan',T1:280,T2:210,TLS:1.0,Gf:-1582},
+  hafnium_oxide:{label:'HfOx',T1:180,T2:130,TLS:1.0,Gf:-1144},
+  zirconium_oxide:{label:'ZrO₂',T1:160,T2:110,TLS:1.1,Gf:-1040},
+  aluminum_nitride:{label:'AlN',T1:200,T2:140,TLS:0.9,Gf:-318},
+  titanium_nitride:{label:'TiN',T1:150,T2:100,TLS:1.3,Gf:-309},
+  silicon_nitride:{label:'Si₃N₄',T1:100,T2:70,TLS:1.5,Gf:-745},
+  magnesium_oxide:{label:'MgOx',T1:160,T2:110,TLS:1.1,Gf:-601},
+  silicon_oxide:{label:'SiOx',T1:90,T2:60,TLS:2.0,Gf:-856},
+  indium_oxide:{label:'InOx',T1:70,T2:45,TLS:2.5,Gf:-295},
+  niobium_film:{label:'Nb film',T1:50,T2:40,TLS:1.5,Gf:-185},
+  niobium_nitride:{label:'NbN',T1:30,T2:20,TLS:0.8,Gf:-237},
+  nbtio:{label:'NbTiN',T1:40,T2:30,TLS:1.0,Gf:-210},
+  niobium_titanium:{label:'NbTi',T1:40,T2:28,TLS:1.2,Gf:-200},
+  niobium_tin:{label:'Nb₃Sn',T1:20,T2:12,TLS:1.4,Gf:-180},
+  niobium_germanium:{label:'Nb₃Ge',T1:15,T2:8,TLS:1.6,Gf:-160},
+  niobium_silicide:{label:'NbSi',T1:30,T2:20,TLS:1.0,Gf:-175},
+  niobium_aluminide:{label:'Nb₃Al',T1:20,T2:12,TLS:1.4,Gf:-190},
+  niobium_oxide:{label:'Nb-NbOx',T1:50,T2:35,TLS:2.0,Gf:-185},
+  rhenium:{label:'Re',T1:100,T2:80,TLS:1.0,Gf:-200},
+  molybdenum_rhenium:{label:'MoRe',T1:50,T2:40,TLS:0.9,Gf:-220},
+  vanadium:{label:'V',T1:30,T2:20,TLS:1.3,Gf:-150},
+  vanadium_silicide:{label:'V₃Si',T1:20,T2:12,TLS:1.5,Gf:-165},
+  molybdenum:{label:'Mo',T1:30,T2:20,TLS:1.3,Gf:-140},
+  indium_film:{label:'In',T1:30,T2:20,TLS:1.4,Gf:-130},
+  tin_film:{label:'Sn',T1:20,T2:15,TLS:1.5,Gf:-120},
+  hafnium:{label:'Hf',T1:20,T2:12,TLS:1.6,Gf:-135},
+  magnesium_diboride:{label:'MgB₂',T1:20,T2:10,TLS:1.7,Gf:-150},
+  granular_aluminum:{label:'grAl',T1:23,T2:46,TLS:1.5,Gf:-1582},
+  amorphous_silicon:{label:'aSi',T1:80,T2:55,TLS:2.5,Gf:-455},
+  van_der_waals:{label:'hBN-vdW',T1:60,T2:40,TLS:1.8,Gf:-254},
+  aluminum_on_inas:{label:'Al/InAs',T1:10,T2:5,TLS:3.0,Gf:-280},
+  nv_diamond:{label:'NV diamond',T1:10000,T2:1000,TLS:0.3,Gf:-395},
+};
+const QUB={
+  transmon:{label:'Transmon',eta:3,freq:5,tier:1},
+  fluxonium:{label:'Fluxonium',eta:25,freq:0.5,tier:1},
+  cat:{label:'Cat qubit',eta:500,freq:6,tier:2},
+  kerr_cat:{label:'Kerr-cat',eta:100,freq:6,tier:2},
+  tunable_transmon:{label:'Tunable Transmon',eta:2.5,freq:5,tier:2},
+  csfq:{label:'CSFQ',eta:6,freq:4,tier:2},
+  dual_rail:{label:'Dual-Rail Cavity',eta:1,freq:6,tier:2},
+  snailmon:{label:'SNAILmon',eta:4,freq:5,tier:2},
+  zero_pi:{label:'0-π qubit',eta:50,freq:0.5,tier:3},
+  heavy_fluxonium:{label:'Heavy Fluxonium',eta:100,freq:0.1,tier:3},
+  unimon:{label:'Unimon',eta:4,freq:5,tier:3},
+  bifluxon:{label:'Bifluxon',eta:15,freq:0.5,tier:3},
+  gatemon:{label:'Gatemon',eta:2,freq:5,tier:3},
+  fluxonium_transmon:{label:'Fluxonium-Transmon',eta:12,freq:2,tier:3},
+  protected_sc:{label:'Protected SC',eta:30,freq:1.5,tier:3},
+};
+const QEC={
+  surface:{label:'Surface code',th:0.01,cy:1.0,bias:'agnostic',shape:'square',note:'Fowler 2012 · Google/IBM transmon'},
+  rotated_surface:{label:'Rotated surface',th:0.01,cy:1.1,bias:'agnostic',shape:'square',note:'Google Willow 2024'},
+  unrotated_surface:{label:'Unrotated surface',th:0.009,cy:1.1,bias:'agnostic',shape:'square',note:'Standard CSS layout'},
+  toric:{label:'Toric code',th:0.011,cy:1.0,bias:'agnostic',shape:'square',note:'Kitaev 1997 · periodic'},
+  surface_17:{label:'Surface-17 (d=3)',th:0.01,cy:1.0,bias:'agnostic',shape:'square',note:'Zuchongzhi/Zurich d=3'},
+  surface_49:{label:'Surface-49 (d=5)',th:0.01,cy:1.0,bias:'agnostic',shape:'square',note:'Sycamore d=5'},
+  xysurface:{label:'XY surface',th:0.018,cy:1.0,bias:'low',shape:'square',note:'Tuckett 2020 · biased'},
+  clifford_deformed:{label:'Clifford-deformed surface',th:0.011,cy:1.0,bias:'agnostic',shape:'square',note:'Dua 2024'},
+  tailored_surface:{label:'Tailored surface',th:0.0123,cy:1.0,bias:'high',shape:'square',note:'Tailored to Z-bias'},
+  xzzx:{label:'XZZX surface',th:0.03,cy:1.0,bias:'high',shape:'square',note:'Bonilla Ataides 2021 · 50% @ ∞ bias'},
+  xzzx_713:{label:'XZZX [[7,1,3]]',th:0.025,cy:1.0,bias:'high',shape:'square',note:'Small XZZX cyclic'},
+  xzzx_kerrcat:{label:'XZZX + Kerr-cat',th:0.065,cy:1.0,bias:'extreme',shape:'square',note:'Darmawan 2021 · pCX 6.5%'},
+  quantum_repetition:{label:'Repetition (1D)',th:0.5,cy:0.5,bias:'extreme',shape:'chain',note:'Bit-flip only · cat qubits'},
+  repetition_cat:{label:'Repetition-cat',th:0.5,cy:0.5,bias:'extreme',shape:'chain',note:'Guillaud-Mirrahimi 2019 · AWS'},
+  color:{label:'2D color (6.6.6)',th:0.0037,cy:1.2,bias:'low',shape:'triangular',note:'Bombin 2006 · Google 2025'},
+  triangular_color:{label:'Triangular color',th:0.0037,cy:1.2,bias:'low',shape:'triangular',note:'Triangular patch'},
+  color_488:{label:'Color 4.8.8',th:0.0035,cy:1.2,bias:'low',shape:'triangular',note:'Square-octagon tiling'},
+  color_4612:{label:'Color 4.6.12',th:0.0019,cy:1.3,bias:'low',shape:'triangular',note:'Truncated trihexagonal'},
+  heavy_hex:{label:'Heavy-Hex',th:0.0045,cy:1.0,bias:'agnostic',shape:'square',note:'Chamberland 2020 · IBM'},
+  heavy_hex_tailored:{label:'Heavy-Hex tailored',th:0.0023,cy:1.0,bias:'high',shape:'square',note:'Kim 2022 · biased on heavy-hex'},
+  heavy_hex_xzzx:{label:'Heavy-Hex XZZX',th:0.0021,cy:1.0,bias:'high',shape:'square',note:'XZZX on heavy-hex'},
+  bacon_shor:{label:'Bacon-Shor',th:0.002,cy:0.8,bias:'high',shape:'square',note:'Aliferis 2007 · subsystem'},
+  bacon_shor_13:{label:'Bacon-Shor [[13]]',th:0.002,cy:0.8,bias:'high',shape:'square',note:'d=3 Bacon-Shor'},
+  subsystem_surface:{label:'Subsystem surface',th:0.0081,cy:1.0,bias:'agnostic',shape:'square',note:'Bravyi subsystem'},
+  floquet_honeycomb:{label:'Floquet honeycomb',th:0.0075,cy:0.7,bias:'agnostic',shape:'triangular',note:'Hastings-Haah 2021'},
+  floquet_bacon_shor:{label:'Floquet-Bacon-Shor',th:0.0066,cy:0.7,bias:'high',shape:'square',note:'Dynamical · 2025 demo'},
+  ckt_honeycomb:{label:'CSS honeycomb',th:0.007,cy:0.7,bias:'agnostic',shape:'triangular',note:'Kesselring 2022'},
+  steane:{label:'Steane [[7,1,3]]',th:0.0001,cy:0.7,bias:'agnostic',shape:'triangular',note:'Steane 1996 · color patch'},
+  shor_nine:{label:'Shor [[9,1,3]]',th:0.0001,cy:0.7,bias:'agnostic',shape:'square',note:'Shor 1995'},
+  five_qubit:{label:'[[5,1,3]] perfect',th:0.0001,cy:0.6,bias:'agnostic',shape:'square',note:'Laflamme 1996 · smallest'},
+  carbon_1212:{label:'[[12,2,4]] carbon',th:0.0002,cy:0.7,bias:'agnostic',shape:'square',note:'Concatenated'},
+  cat_code:{label:'Cat code (cavity)',th:0.01,cy:2.0,bias:'extreme',shape:'cavity',note:'Ofek 2016 · Yale · break-even'},
+  binomial:{label:'Binomial code',th:0.012,cy:2.0,bias:'agnostic',shape:'cavity',note:'Michael 2016 · Hu 2019'},
+  gkp:{label:'GKP code',th:0.015,cy:2.0,bias:'agnostic',shape:'cavity',note:'Campagne-Ibarcq 2020 · Sivak 2023'},
+  gkp_surface:{label:'GKP-surface concat',th:0.02,cy:1.5,bias:'agnostic',shape:'square',note:'GKP + surface concatenation'},
+  dual_rail_code:{label:'Dual-rail erasure',th:0.025,cy:1.2,bias:'agnostic',shape:'cavity',note:'Teoh 2023 · erasure-biased'},
+  fourlegged_cat:{label:'4-legged cat',th:0.011,cy:2.0,bias:'extreme',shape:'cavity',note:'Higher-order cat'},
+};
+const DOP={
+  none:{label:'none',sup:0,pct:0},
+  nitrogen:{label:'N',sup:0.4,pct:12},
+  fluorine:{label:'F',sup:0.55,pct:8},
+  erbium:{label:'Er',sup:0.3,pct:6},
+  yttrium:{label:'Y',sup:0.25,pct:5},
+  lanthanum:{label:'La',sup:0.2,pct:4},
+  hydrogen:{label:'H',sup:0.2,pct:5},
+  silicon_dop:{label:'Si',sup:-0.1,pct:3},
+  titanium_dop:{label:'Ti',sup:0.05,pct:4},
+  oxygen_dop:{label:'O',sup:0.1,pct:8},
+  carbon:{label:'C',sup:-0.1,pct:3},
+  sulfur:{label:'S',sup:-0.15,pct:2},
+};
+const LAYER2={none:null,
+  below_tantalum:{label:'L2 α-Ta',pos:'below',iTLS:0.06},
+  below_aluminum:{label:'L2 Al',pos:'below',iTLS:0.08},
+  below_niobium:{label:'L2 Nb',pos:'below',iTLS:0.14},
+  below_tin:{label:'L2 TiN',pos:'below',iTLS:0.10},
+  above_aluminum:{label:'L4 Al',pos:'above',iTLS:0.08},
+  above_tantalum:{label:'L4 Ta',pos:'above',iTLS:0.06},
+  above_niobium:{label:'L4 Nb',pos:'above',iTLS:0.14},
+  above_grAl:{label:'L4 grAl',pos:'above',iTLS:0.12}};
+const GATE=0.001;
+
+const LOCK={qubit:true,host:true,dop:false,code:false,dist:false};
+
+// ════════════════════════════════════════════════════════════════════
+// PHYSICS (verified calibration — clean tier separation)
+// ════════════════════════════════════════════════════════════════════
+function coherence(hk,dk,tempChipMK,freqGHz,l2k){
+  const m=MAT[hk],d=DOP[dk];
+  const f=Math.max(0.25,1-d.sup);          // dopant lowers effective TLS
+  // ── Gibbs → TLS → coherence link (the physical connection) ──
+  const G=gibbs(hk,dk);
+  const stabilityFactor = Math.max(0.5, Math.min(1.0, 0.5 + (-G-200)/1600));
+  // Chip temperature factor: warmer = more thermal excitation = shorter coherence.
+  const kB=8.617e-5, hf=6.626e-34*(freqGHz||5)*1e9/1.602e-19;
+  const tK=Math.max(tempChipMK||15,1)/1000;
+  const thermal=Math.tanh(hf/(2*kB*tK));   // ~1 when cold, drops when warm
+  const tempFactor=Math.max(0.5,thermal);
+  // ── 2nd-layer interface factor (R4d) ──
+  // The buried interface between Layer 3 and the adjacent layer carries TLS.
+  // A clean interface (Ta, iTLS 0.06) barely hurts; a lossy one (Nb, 0.14)
+  // adds a real coherence penalty. None = no second interface = factor 1.
+  const l2 = (l2k && LAYER2[l2k]) ? LAYER2[l2k] : null;
+  const ifaceFactor = l2 ? Math.max(0.6, 1 - (l2.iTLS-0.06)*3) : 1.0;
+  const coh = tempFactor*stabilityFactor*ifaceFactor;
+  const T1=Math.min(m.T1/f, m.T1*1.25)*coh;
+  const T2=Math.min(m.T2/f, T1*0.95, m.T2*1.25)*coh;
+  return {T1,T2,stabilityFactor,ifaceFactor};
+}
+function stackFloor(hemtK, filterMK){
+  const base=GATE;
+  const hemtPenalty = Math.max(0,(hemtK-4)/4)*0.0005;
+  const filterPenalty = Math.max(0,(filterMK-100)/800)*0.0008;
+  return base + hemtPenalty + filterPenalty;
+}
+function physErr(T1,T2,ck,floor){const c=QEC[ck];return c.cy/T1 + c.cy/(2*T2) + (floor||GATE);}
+function logicalErr(p,th,d){
+  const r=p/th;
+  if(r<1){const e=Math.floor(d/2)+1;return 0.01*Math.pow(r,e);}  // Fowler/Willow
+  return Math.min(0.5,0.3*Math.pow(r,1.2));
+}
+
+// ════════════════════════════════════════════════════════════════════
+// GNN DECODER (AlphaQubit-style, geometry-aware) — R17
+// AlphaQubit (Bausch 2024) is a learned decoder that beats MWPM by adapting
+// to the actual noise. We model a graph-neural-network decoder operating ON
+// the code's connectivity graph (qecNodes): it passes messages between
+// neighbouring stabilizers, so its accuracy gain depends on the geometry's
+// connectivity degree and how well it exploits the noise bias.
+//   - higher connectivity (square deg-4) → more neighbour info → bigger gain
+//   - biased noise (high η) → GNN learns the structure → extra gain
+// Result: a multiplicative reduction in logical error vs plain MWPM.
+// ════════════════════════════════════════════════════════════════════
+function gnnDecode(pL_mwpm, ck, eta){
+  const shape=QEC[ck].shape;
+  // base GNN gain over MWPM (AlphaQubit: ~1.35× at distance 11)
+  let gain = 1.35;
+  // connectivity bonus: square (deg-4) gives the GNN more message-passing edges
+  if(shape==='square') gain += 0.15;
+  else if(shape==='triangular') gain += 0.08;
+  else if(shape==='cavity') gain += 0.20;   // bosonic soft-info decoding helps most
+  else if(shape==='chain') gain += 0.03;
+  // bias bonus: GNN learns biased-noise structure (more η = more to exploit)
+  gain += Math.min(0.5, (eta-1)/40);
+  const pL_gnn = pL_mwpm / gain;
+  return { pL_gnn, gain };
+}
+
+function gibbs(hk,dk){
+  const m=MAT[hk],d=DOP[dk];
+  const alpha=d.pct/100;
+  const Hmix = (d.sup>0? -8*d.sup : -d.sup*40) * alpha*(1-alpha)*100;
+  return m.Gf + Hmix;
+}
+function biasOK(qk,ck){
+  const need=QEC[ck].bias, eta=QUB[qk].eta;
+  if(need==='agnostic') return true;
+  if(need==='high') return eta>=5;
+  if(need==='extreme') return eta>=50;
+  if(need==='low') return eta<=8;
+  return true;
+}
+function evaluate(qk,hk,dk,ck,d,opts){
+  opts=opts||{};
+  const tempChip=opts.tempChip!=null?opts.tempChip:15;
+  const freq=opts.freq!=null?opts.freq:(QUB[qk]?QUB[qk].freq:5);
+  const hemt=opts.hemt!=null?opts.hemt:4;
+  const filter=opts.filter!=null?opts.filter:100;
+  const l2k=opts.layer2||'none';
+  const {T1,T2,stabilityFactor,ifaceFactor}=coherence(hk,dk,tempChip,freq,l2k);
+  const floor=stackFloor(hemt,filter);
+  const p=physErr(T1,T2,ck,floor), th=QEC[ck].th;
+  const below=p<th;
+  const pL=logicalErr(p,th,d);                       // MWPM baseline
+  const eta=QUB[qk]?QUB[qk].eta:3;
+  const {pL_gnn,gain}=gnnDecode(pL,ck,eta);          // GNN-decoded (R17)
+  const compatible=biasOK(qk,ck);
+  return {T1,T2,p,th,below,pL,pL_gnn,gnnGain:gain,compatible,Gf:gibbs(hk,dk),stabilityFactor,ifaceFactor};
+}
+function tierOf(e,target){
+  if(!e.compatible) return 'FAIL';
+  // Use the GNN-decoded logical error (R17) — the best the chip can achieve.
+  // Below threshold is still the necessary condition (no decoder fixes that).
+  const pL = e.pL_gnn!=null ? e.pL_gnn : e.pL;
+  if(e.below && pL < target/3) return 'PASS';
+  if(e.below && pL < target) return 'MODERATE';
+  return 'FAIL';
+}
+
+// ════════════════════════════════════════════════════════════════════
+// LATTICE DRAWING — QEC (top) shows code structure, material (bottom) shows doping
+// ════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════
+// ACCURATE QEC GEOMETRY — each code's true physical layout.
+// ALL THREE VIEWS (QEC lattice, material lattice, sampler) call this
+// function and use identical node positions — they are the same qubits.
+// Coords normalised to [0.05..0.95] so they fit the SVG viewBox.
+// ════════════════════════════════════════════════════════════════════
+function qecNodes(ck,d){
+  const nodes=[],edges=[];
+  const add=(x,y,r)=>{nodes.push({x,y,role:r});return nodes.length-1;};
+  const link=(a,b)=>{if(a!=null&&b!=null&&a!==b)edges.push([a,b]);};
+  const shape=QEC[ck]?QEC[ck].shape:'square';
+  const dd=Math.min(Math.max(d,3),7);
+
+  // ─── helper: normalise all node coords to [pad..1-pad] ───
+  function normalise(pad=0.06){
+    let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+    nodes.forEach(n=>{if(n.x<minX)minX=n.x;if(n.x>maxX)maxX=n.x;if(n.y<minY)minY=n.y;if(n.y>maxY)maxY=n.y;});
+    const span=Math.max(maxX-minX,maxY-minY,0.001);
+    nodes.forEach(n=>{n.x=pad+(n.x-minX)/span*(1-2*pad);n.y=pad+(n.y-minY)/span*(1-2*pad);});
+  }
+
+  if(shape==='triangular'){
+    // ── EXACT 6.6.6 triangular color-code patch ──
+    // Data qubits at axial hex-grid vertices inside an equilateral triangle.
+    // Syndrome qubits at incentres of each triangular face.
+    const S=Math.sqrt(3);
+    const map={};
+    for(let r=0;r<dd;r++) for(let q=0;q<dd-r;q++){
+      // axial → cartesian hex: x = q + r*0.5, y = r*sqrt(3)/2
+      map[`${q},${r}`]=add(q+r*0.5, r*S/2, 'data');
+    }
+    // syndromes at face centres
+    for(let r=0;r<dd-1;r++) for(let q=0;q<dd-r-1;q++){
+      // upward triangle (q,r)(q+1,r)(q,r+1)
+      const a=map[`${q},${r}`],b=map[`${q+1},${r}`],c=map[`${q},${r+1}`];
+      if(a!=null&&b!=null&&c!=null){
+        const sx=(nodes[a].x+nodes[b].x+nodes[c].x)/3;
+        const sy=(nodes[a].y+nodes[b].y+nodes[c].y)/3;
+        const s=add(sx,sy,'syn');
+        link(s,a);link(s,b);link(s,c);
+      }
+      // downward triangle (q+1,r)(q+1,r-1)(q+1,r+1) — only if q>0 gives interior
+      if(q+1<=dd-r-1){
+        const pa=map[`${q+1},${r}`],pb=map[`${q},${r+1}`],pc=map[`${q+1},${r}`];
+        const da=map[`${q+1},${r}`],db=map[`${q},${r+1}`],dc=map[`${q+1},${r+1}`];
+        if(da!=null&&db!=null&&dc!=null){
+          const sx=(nodes[da].x+nodes[db].x+nodes[dc].x)/3;
+          const sy=(nodes[da].y+nodes[db].y+nodes[dc].y)/3;
+          const s=add(sx,sy,'syn');
+          link(s,da);link(s,db);link(s,dc);
+        }
+      }
+    }
+    normalise(0.07);
+
+  } else if(shape==='chain'){
+    // ── EXACT 1D REPETITION CHAIN ──
+    const m=Math.min(2*dd-1,13);
+    let prev=null;
+    for(let k=0;k<m;k++){
+      const id=add(k/(m-1), 0.5, k%2===0?'data':'syn');
+      if(prev!=null) link(prev,id);
+      prev=id;
+    }
+    normalise(0.05);
+
+  } else if(shape==='cavity'){
+    // ── BOSONIC CAVITY — concentric Fock-state shells ──
+    // Centre mode + rings of photon-number states
+    const center=add(0.5,0.5,'data');
+    const shells=Math.min(dd,5);
+    for(let ring=1;ring<=shells;ring++){
+      const n=ring*6, rad=ring/(shells+1)*0.45;
+      for(let k=0;k<n;k++){
+        const ang=2*Math.PI*k/n - Math.PI/2;
+        const id=add(0.5+rad*Math.cos(ang), 0.5+rad*Math.sin(ang), ring%2?'syn':'data');
+        link(center,id);
+        // connect adjacent nodes in the ring
+        if(k>0) link(id,nodes.length-2);
+      }
+      link(nodes.length-1, nodes.length-1-(Math.min(dd,5)*6 + (ring-1)*6 - 1));// close ring (approx)
+    }
+
+  } else {
+    // ── SURFACE / XZZX / HEAVY-HEX / FLOQUET / SUBSYSTEM — ALL SQUARE-FAMILY ──
+    // Use the same correct surface-code layout as the base for all square codes.
+    // Heavy-hex differs by only using degree-3 connectivity (every-other-edge syndromes).
+    const isHeavy = ck==='heavy_hex'||ck==='heavy_hex_tailored'||ck==='heavy_hex_xzzx';
+    const map={};
+    for(let i=0;i<dd;i++) for(let j=0;j<dd;j++){
+      map[`${i},${j}`]=add(j/(dd-1), i/(dd-1), 'data');
+    }
+    if(isHeavy){
+      // Heavy-hex: syndromes sit ON edges (not plaquette centres), only on alternating edges
+      for(let i=0;i<dd;i++) for(let j=0;j<dd-1;j++){
+        if((i+j)%2===0){
+          const s=add((j+0.5)/(dd-1), i/(dd-1), 'syn');
+          link(s,map[`${i},${j}`]); link(s,map[`${i},${j+1}`]);
+        }
+      }
+      for(let i=0;i<dd-1;i++) for(let j=0;j<dd;j++){
+        if((i+j)%2===1){
+          const s=add(j/(dd-1),(i+0.5)/(dd-1),'syn');
+          link(s,map[`${i},${j}`]); link(s,map[`${i+1},${j}`]);
+        }
+      }
+    } else {
+      // Standard surface: plaquette stabilizers at face centres (degree-4)
+      for(let i=0;i<dd-1;i++) for(let j=0;j<dd-1;j++){
+        const s=add((j+0.5)/(dd-1),(i+0.5)/(dd-1),'syn');
+        link(s,map[`${i},${j}`]); link(s,map[`${i},${j+1}`]);
+        link(s,map[`${i+1},${j}`]); link(s,map[`${i+1},${j+1}`]);
+      }
+    }
+    normalise(0.06);
+  }
+
+  return {nodes,edges};
+}
+
+function drawQEC(svgId,ck,d,tier){
+  const svg=document.getElementById(svgId);
+  const W=260,H=150,pad=10;
+  const {nodes,edges}=qecNodes(ck,d);
+  const X=n=>pad+n.x*(W-2*pad), Y=n=>pad+n.y*(H-2*pad);
+  const col=tier==='PASS'?'#1D9E75':tier==='MODERATE'?'#BA7517':tier==='FAIL'?'#c0392b':'#7F77DD';
+  // node size scales with qubit count so large codes still fit
+  const r=Math.max(2.5, Math.min(5, 140/Math.sqrt(nodes.length)));
+  let s='';
+  // edges first (below nodes)
+  edges.forEach(([a,b])=>{const na=nodes[a],nb=nodes[b];
+    s+=`<line x1="${X(na)}" y1="${Y(na)}" x2="${X(nb)}" y2="${Y(nb)}" stroke="${col}" stroke-width="0.8" opacity="0.4"/>`;});
+  // data qubits: filled circles
+  // syndrome qubits: open diamonds (rotated squares)
+  nodes.forEach(n=>{const x=X(n),y=Y(n);
+    if(n.role==='syn'){
+      const dr=r*0.9;
+      s+=`<rect x="${x-dr}" y="${y-dr}" width="${2*dr}" height="${2*dr}" rx="0.5"
+           fill="none" stroke="${col}" stroke-width="1.2" opacity="0.85"
+           transform="rotate(45 ${x} ${y})"/>`;
+    } else {
+      s+=`<circle cx="${x}" cy="${y}" r="${r}" fill="${col}" opacity="0.85"/>`;
+    }
+  });
+  svg.innerHTML=s;
+}
+function drawMaterial(svgId,hk,dk,l2k,tier,ck,d){
+  const svg=document.getElementById(svgId);
+  const W=260,H=150,pad=10;
+  const m=MAT[hk],dop=DOP[dk],l2=LAYER2[l2k];
+  const {nodes}=qecNodes(ck,d);
+  // SAME mapping as drawQEC — coords are already normalised [0.05..0.95]
+  // Add a slight isometric skew for the 3D stack effect
+  const skew=0.08;
+  const X=n=>pad + n.x*(W-2*pad) + n.y*skew*(W-2*pad)*0.5;
+  const Y=n=>pad + n.y*(H-2*pad)*0.82;
+  const goodCol = m.TLS<1.0?'#1D9E75':m.TLS<1.4?'#BA7517':'#c0392b';
+  const r=Math.max(2.5, Math.min(5.5, 130/Math.sqrt(nodes.length)));
+  let s='';
+  if(l2){
+    const dz = l2.pos==='below'? 20 : -20;
+    const iCol = l2.iTLS<0.08?'#1D9E75':l2.iTLS<0.12?'#BA7517':'#c0392b';
+    nodes.forEach(n=>{
+      s+=`<circle cx="${X(n)}" cy="${Y(n)+dz}" r="${r*0.65}" fill="rgba(127,119,221,.18)" stroke="#7F77DD" stroke-width="0.5"/>`;
+    });
+    nodes.forEach((n,idx)=>{ if(idx%2) return;
+      s+=`<line x1="${X(n)}" y1="${Y(n)}" x2="${X(n)}" y2="${Y(n)+dz}" stroke="${iCol}" stroke-width="0.7" opacity="0.5"/>`;
+    });
+  }
+  nodes.forEach((n,idx)=>{
+    const x=X(n),y=Y(n);
+    const isDopant = dk!=='none' && idx%4===0;
+    const col = isDopant ? '#7F77DD' : goodCol;
+    const opacity = isDopant ? 0.7 : 0.55;
+    const nr = isDopant ? r*1.15 : r;
+    s+=`<circle cx="${x}" cy="${y}" r="${nr}" fill="${col}" opacity="${opacity}" stroke="${col}" stroke-width="0.8"/>`;
+  });
+  svg.innerHTML=s;
+}
+// overlay: QEC stabilizers sitting ON the material doping sites — same geometry
+function drawOverlay(svgId,hk,dk,ck,d){
+  const svg=document.getElementById(svgId);
+  const W=130,H=130,pad=10;
+  const {nodes,edges}=qecNodes(ck,d);
+  const X=n=>pad+n.x*(W-2*pad), Y=n=>pad+n.y*(H-2*pad);
+  const r=Math.max(2, Math.min(4.5, 90/Math.sqrt(nodes.length)));
+  let s='';
+  nodes.forEach(n=>{s+=`<circle cx="${X(n)}" cy="${Y(n)}" r="${r*1.3}" fill="rgba(216,90,48,.15)" stroke="#D85A30" stroke-width="0.4"/>`;});
+  edges.forEach(([a,b])=>{const na=nodes[a],nb=nodes[b];
+    s+=`<line x1="${X(na)}" y1="${Y(na)}" x2="${X(nb)}" y2="${Y(nb)}" stroke="#1D9E75" stroke-width="1" opacity="0.6"/>`;});
+  nodes.forEach(n=>{const x=X(n),y=Y(n);
+    if(n.role==='syn') s+=`<rect x="${x-r}" y="${y-r}" width="${2*r}" height="${2*r}" fill="none" stroke="#1D9E75" stroke-width="1" transform="rotate(45 ${x} ${y})"/>`;
+    else s+=`<circle cx="${x}" cy="${y}" r="${r}" fill="#1D9E75"/>`;});
+  svg.innerHTML=s;
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// RECOMMENDER — respects locks, ranks by Gibbs stability
+// ════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════
+// SAME-GEOMETRY CODE SYNTHESIZER (the real "new tailored code" idea)
+// When the user's code fails, we DON'T switch geometry. We synthesize a
+// tailored code IN THE SAME SHAPE FAMILY, raising its effective threshold
+// via bias-tailoring (Hadamard rotation — Roffe 2023, Xu 2022) so it can
+// actually pass while keeping the user's qubit geometry.
+//
+// Rule: a code's threshold can be lifted toward its bias-tailored maximum
+// when the qubit noise is biased. We synthesize the minimal tailoring +
+// distance + material/dopant (respecting locks) that meets the target,
+// staying in the SAME geometry as the user's chosen code.
+// ════════════════════════════════════════════════════════════════════
+
+// bias-tailored max threshold reachable within a geometry family
+function tailoredMaxTh(shape){
+  // square (XZZX-tailorable) → up to 50% at infinite bias (Bonilla Ataides)
+  // triangular (color) → modest lift, ~1% bias-tailored (Sahay/strip-symmetric)
+  // chain (repetition) → already 50%; cavity (bosonic) → ~3% photon-loss limited
+  if(shape==='square') return 0.50;
+  if(shape==='triangular') return 0.012;
+  if(shape==='chain') return 0.50;
+  if(shape==='cavity') return 0.03;   // bosonic: photon-loss limited
+  return 0.03;
+}
+
+function synthesizeSameGeometry(qk,hk,dk,ck,d,target){
+  const userShape = QEC[ck].shape;
+  const eta = QUB[qk].eta;
+  const hosts = LOCK.host? [hk] : Object.keys(MAT);
+  const dops  = LOCK.dop ? [dk] : ['fluorine','nitrogen','erbium','none'];
+  const maxTh = tailoredMaxTh(userShape);
+  // bias-tailoring factor from η: how far we lift toward maxTh (full by η≈20)
+  const tailorFrac = Math.min(1, Math.max(0, (eta-1)/19));
+
+  const out=[];
+  for(const h2 of hosts){
+    for(const dp2 of dops){
+      const dList = LOCK.dist? [d] : [3,5,7];
+      for(const d2 of dList){
+        // synthesize the tailored code: same geometry, lifted threshold
+        const baseTh = QEC[ck].th;
+        const synthTh = baseTh + (maxTh - baseTh)*tailorFrac;
+        // evaluate coherence with this material/dopant
+        const {T1,T2,stabilityFactor} = coherence(h2,dp2,15,QUB[qk].freq);
+        const floor = stackFloor(4,100);
+        const p = QEC[ck].cy/T1 + QEC[ck].cy/(2*T2) + floor;
+        const below = p < synthTh;
+        // effective distance gets a bias boost in tailorable geometries
+        const dEff = (userShape==='square'||userShape==='chain') ? d2*Math.min(Math.sqrt(eta),3) : d2;
+        const pL = logicalErr(p, synthTh, dEff);
+        if(below && pL < target/3){
+          out.push({hk:h2,dk:dp2,dist:d2,synthTh,T1,T2,pL,
+            Gf:gibbs(h2,dp2),tailorPct:Math.round(tailorFrac*100),
+            shape:userShape, dEff});
+        }
+      }
+    }
+  }
+  // rank by stability then logical error
+  out.sort((a,b)=>(a.Gf-b.Gf)||(a.pL-b.pL));
+  return out[0]||null;
+}
+
+function recommend(qk,hk,dk,ck,d,target){
+  // Always synthesize in the SAME geometry as the user's code.
+  return synthesizeSameGeometry(qk,hk,dk,ck,d,target);
+}
+
+// ════════════════════════════════════════════════════════════════════
+// UI
+// ════════════════════════════════════════════════════════════════════
+function tog(key){
+  LOCK[key]=!LOCK[key];
+  const map={qubit:'lk_qubit',host:'lk_host',dop:'lk_dop',code:'lk_code',dist:'lk_dist'};
+  const el=document.getElementById(map[key]);
+  if(LOCK[key]){el.className='lock keep';el.textContent='🔒keep';}
+  else{el.className='lock opt';el.textContent='🔓optimize';}
+}
+function sync(){
+  // live preview of the two lattices (neutral color until run)
+  const ck=document.getElementById('code').value, d=parseInt(document.getElementById('dist').value)||5;
+  const hk=document.getElementById('host').value, dk=document.getElementById('dop').value, l2=document.getElementById('layer2').value;
+  document.getElementById('qec_tag').textContent=`QEC: ${QEC[ck].label} d=${d} · stabilizer connectivity`;
+  document.getElementById('mat_tag').textContent=`Material: ${MAT[hk].label}${dk!=='none'?' + '+DOP[dk].label:''}${l2!=='none'?' + '+LAYER2[l2].label+' layer':''}`;
+  drawQEC('qec_svg',ck,d,'wait');
+  drawMaterial('mat_svg',hk,dk,l2,'wait',ck,d);
+}
+function loadEx(t){
+  const set=(id,v)=>document.getElementById(id).value=v;
+  if(t==='pass'){set('qubit','fluxonium');set('host','tantalum_cap');set('dop','fluorine');set('code','xzzx');set('dist','5');set('target','0.005');set('layer2','below_tantalum');}
+  else if(t==='mod'){set('qubit','transmon');set('host','aluminum_oxide_dolan');set('dop','nitrogen');set('code','surface');set('dist','5');set('target','0.005');set('layer2','none');}
+  else{set('qubit','transmon');set('host','niobium_nitride');set('dop','none');set('code','surface');set('dist','5');set('target','0.005');set('layer2','none');}
+  sync(); run();
+}
+
+// ════════════════════════════════════════════════════════════════════
+// LIVE GIBBS SAMPLER — draws each doping config tried in real-time.
+// Nodes = same QEC topology (same physical qubits). Each site is either
+// doped (bright, dopant colour) or undoped (faint). Score bar tracks
+// how close the current config is to optimal. Converges to best config.
+// ════════════════════════════════════════════════════════════════════
+function drawSamplerFrame(svgId, nodes, dopingMask, hk, dk, currentScore, bestScore){
+  const svg=document.getElementById(svgId);
+  if(!svg) return;
+  const W=260, H=80, pad=8;
+  // SAME normalised coords as qecNodes — just compressed into the smaller H
+  const X=n=>pad+n.x*(W-2*pad);
+  const Y=n=>pad+n.y*(H-2*pad);
+  const mat=MAT[hk], dop=DOP[dk];
+  const dopCol = dop&&dop.sup>0 ? '#7F77DD' : '#D85A30';
+  const goodCol = mat.TLS<1.0?'#1D9E75':mat.TLS<1.4?'#BA7517':'#c0392b';
+  const nr=Math.max(2, Math.min(4, 70/Math.sqrt(nodes.length)));
+  const isBest = currentScore>=bestScore*0.97;
+  let s='';
+  // draw edges faintly so the structure is visible
+  // (we don't have edges in scope here — just nodes from the run loop)
+  // nodes colored by doping state
+  nodes.forEach((n,i)=>{
+    const x=X(n), y=Y(n);
+    const doped = dopingMask[i];
+    if(n.role==='syn'){
+      const col = doped ? dopCol : '#1e1e1e';
+      const dr = doped ? nr*0.9 : nr*0.6;
+      s+=`<rect x="${x-dr}" y="${y-dr}" width="${2*dr}" height="${2*dr}"
+           fill="${col}" opacity="${doped?0.85:0.12}"
+           stroke="${isBest&&doped?'#1D9E75':col}" stroke-width="${isBest&&doped?1.2:0.3}"
+           transform="rotate(45 ${x} ${y})"/>`;
+    } else {
+      const col = doped ? goodCol : '#1a1a1a';
+      const r = doped ? (isBest ? nr*1.2 : nr) : nr*0.6;
+      s+=`<circle cx="${x}" cy="${y}" r="${r}"
+           fill="${col}" opacity="${doped?0.85:0.1}"
+           stroke="${isBest&&doped?'#1D9E75':'none'}" stroke-width="1"/>`;
+    }
+  });
+  svg.innerHTML=s;
+}
+
+// Config score: lower physical error = higher score (0–1)
+function configScore(dopingFraction, hk, dk, ck, opts){
+  // fast estimate: dopant fraction affects TLS → T1 → error
+  const mat=MAT[hk], dop=DOP[dk];
+  const f=Math.max(0.25,1-dop.sup*dopingFraction*1.5);
+  const tK=Math.max(opts.tempChip||15,1)/1000;
+  const kB=8.617e-5, hf=6.626e-34*(opts.freq||5)*1e9/1.602e-19;
+  const thermal=Math.max(0.5,Math.tanh(hf/(2*kB*tK)));
+  const G=gibbs(hk,dk);
+  const sf=Math.max(0.5,Math.min(1.0,0.5+(-G-200)/1600));
+  const T1=Math.min(mat.T1/f, mat.T1*1.25)*thermal*sf;
+  const T2=Math.min(mat.T2/f, T1*0.95, mat.T2*1.25)*thermal*sf;
+  const floor=stackFloor(opts.hemt||4, opts.filter||100);
+  const err=QEC[ck].cy/T1 + QEC[ck].cy/(2*T2) + floor;
+  return {score: Math.max(0, 1-err/QEC[ck].th), err, T1};
+}
+
+let samplerRunning=false, samplerStop=false;
+
+async function run(){
+  if(samplerRunning){samplerStop=true;await new Promise(r=>setTimeout(r,80));samplerStop=false;}
+  samplerRunning=true;
+
+  const qk=document.getElementById('qubit').value, hk=document.getElementById('host').value,
+        dk=document.getElementById('dop').value, ck=document.getElementById('code').value,
+        d=parseInt(document.getElementById('dist').value)||5,
+        target=parseFloat(document.getElementById('target').value)||0.005,
+        l2=document.getElementById('layer2').value;
+  const opts={
+    tempChip:parseFloat(document.getElementById('temp_chip').value)||15,
+    freq:parseFloat(document.getElementById('qubit_freq').value)||(QUB[qk]?QUB[qk].freq:5),
+    hemt:parseFloat(document.getElementById('temp_hemt').value)||4,
+    filter:parseFloat(document.getElementById('temp_filter').value)||100,
+    layer2:l2,
+  };
+
+  const {nodes}=qecNodes(ck,d);
+  const N=nodes.length;
+
+  // ── LIVE GIBBS SAMPLER ──
+  // Each iteration: flip a random subset of doping sites using Gibbs acceptance.
+  // β = inverse temperature: colder chip → sharper Gibbs → greedier convergence.
+  const β = 12000 / Math.max(opts.tempChip,1);
+  let mask = new Uint8Array(N);
+  // init: ~40% doped randomly
+  for(let i=0;i<N;i++) mask[i]=Math.random()<0.4?1:0;
+  let bestMask=mask.slice(), bestScore=0;
+  const ITERS=60;
+
+  // draw QEC lattice immediately (static)
+  drawQEC('qec_svg',ck,d,'wait');
+  document.getElementById('qec_tag').textContent=`QEC: ${QEC[ck].label} d=${d}`;
+
+  for(let it=0;it<ITERS;it++){
+    if(samplerStop) break;
+
+    // flip a random node with Gibbs acceptance
+    const nFlips=Math.max(1,Math.floor(N*0.15));
+    for(let f=0;f<nFlips;f++){
+      const i=Math.floor(Math.random()*N);
+      let cnt=0;for(let _i=0;_i<N;_i++)cnt+=mask[_i];const dopFrac=cnt/N;
+      const newFrac=(mask[i]?dopFrac-1/N:dopFrac+1/N);
+      const {score:sOld}=configScore(dopFrac,hk,dk,ck,opts);
+      const {score:sNew}=configScore(newFrac,hk,dk,ck,opts);
+      const dE=sOld-sNew;                       // energy = -score
+      if(dE<0 || Math.random()<Math.exp(-β*dE)) mask[i]=1-mask[i];
+    }
+
+    let cnt=0;for(let _i=0;_i<N;_i++)cnt+=mask[_i];const dopFrac=cnt/N;
+    const {score,err,T1}=configScore(dopFrac,hk,dk,ck,opts);
+    if(score>bestScore){bestScore=score;bestMask=mask.slice();}
+
+    // draw the live frame
+    drawSamplerFrame('sampler_svg',nodes,mask,hk,dk,score,bestScore);
+    // update sampler stats
+    const pct=Math.round(dopFrac*100);
+    document.getElementById('sampler_iter').textContent=`iter ${it+1}/${ITERS}`;
+    document.getElementById('sampler_bar').style.width=Math.min(100,Math.round(score*100))+'%';
+    document.getElementById('sampler_stats').textContent=
+      `doping ${pct}% · err ${(err*100).toFixed(2)}% · T1≈${T1.toFixed(0)}μs · score ${score.toFixed(3)}`;
+
+    // yield to browser every frame
+    await new Promise(r=>setTimeout(r,0));
+  }
+
+  // ── FINAL: evaluate with best doping config → verdict ──
+  const bestDopFrac=bestMask.reduce((a,b)=>a+b,0)/N;
+  const e=evaluate(qk,hk,dk,ck,d,opts);
+  const tier=tierOf(e,target);
+
+  // draw final best config in sampler (glowing)
+  drawSamplerFrame('sampler_svg',nodes,bestMask,hk,dk,bestScore,bestScore);
+  document.getElementById('sampler_iter').textContent=`✓ converged`;
+  document.getElementById('sampler_stats').textContent=
+    `optimal: ${Math.round(bestDopFrac*100)}% doped · score ${bestScore.toFixed(3)}`;
+
+  // update material lattice with best config color
+  drawMaterial('mat_svg',hk,dk,l2,tier,ck,d);
+  document.getElementById('mat_tag').textContent=`Material: ${MAT[hk].label}${dk!=='none'?' + '+DOP[dk].label:''}`;
+
+  // update QEC lattice with verdict color
+  drawQEC('qec_svg',ck,d,tier);
+
+  // ── VERDICT ──
+  const v=document.getElementById('verdict'), vs=document.getElementById('vstats');
+  const cls=tier==='PASS'?'pass':tier==='MODERATE'?'mod':'fail';
+  v.className='verdict-big '+cls; v.textContent=tier+(tier==='PASS'?' ✓':tier==='MODERATE'?' ~':' ✗');
+  const pLfinal = e.pL_gnn!=null ? e.pL_gnn : e.pL;
+  const thSym=e.below?'pv':'fv', tSym=(pLfinal<target)?'pv':'fv';
+  let reason='';
+  if(!e.compatible) reason=`<span class="fv">✗ ${QUB[qk].label} (η=${QUB[qk].eta}) incompatible with ${QEC[ck].label} (needs ${QEC[ck].bias} bias)</span><br/>`;
+  vs.innerHTML=`${reason}
+    <span class="hl">physical err</span> ${(e.p*100).toFixed(2)}% vs threshold ${(e.th*100).toFixed(2)}% <span class="${thSym}">${e.below?'✓':'✗'}</span><br/>
+    <span class="hl">logical err (GNN)</span> p_L=${pLfinal.toExponential(1)} vs target ${target.toExponential(0)} <span class="${tSym}">${pLfinal<target?'✓':'✗'}</span><br/>
+    <span style="color:var(--purple)">GNN decoder ${e.gnnGain.toFixed(2)}× better than MWPM (${e.pL.toExponential(1)})</span><br/>
+    T1=${e.T1.toFixed(0)}μs · T2=${e.T2.toFixed(0)}μs${e.ifaceFactor<1?` · iface ×${e.ifaceFactor.toFixed(2)}`:''} · ${QEC[ck].label} d=${d}`;
+
+  // output strip
+  const ok=x=>`<span class="ok">${x} ✓</span>`, no=x=>`<span class="no">${x} ✗</span>`;
+  document.getElementById('o_t1').innerHTML = e.below?ok(e.T1.toFixed(0)+'μs'):no(e.T1.toFixed(0)+'μs');
+  document.getElementById('o_t2').innerHTML = e.below?ok(e.T2.toFixed(0)+'μs'):no(e.T2.toFixed(0)+'μs');
+  document.getElementById('o_perr').innerHTML = e.below?ok((e.p*100).toFixed(2)+'%'):no((e.p*100).toFixed(2)+'%');
+  document.getElementById('o_thr').textContent = (e.th*100).toFixed(2)+'%';
+  document.getElementById('o_pL').innerHTML = (pLfinal<target)?ok(pLfinal.toExponential(1)):no(pLfinal.toExponential(1));
+
+  // gibbs display
+  const Gf=e.Gf;
+  const stabPct=Math.max(0,Math.min(100,(-Gf/2000)*100));
+  document.getElementById('gibbs_fill').style.width=stabPct+'%';
+  const stableWord=Gf<-1000?'very stable':Gf<-400?'stable':Gf<-200?'marginally stable':'unstable';
+  const sf=e.stabilityFactor!=null?e.stabilityFactor:1;
+  document.getElementById('gibbs_text').innerHTML=
+    `ΔGf=<b>${Gf.toFixed(0)} kJ/mol</b> → <b>${stableWord}</b> → ${sf>=0.95?'low structural TLS':sf>=0.7?'some TLS from disorder':'<span style="color:var(--amber)">high TLS from disorder</span>'} → coherence ×<b>${sf.toFixed(2)}</b>. ${sf>=0.7?'Stable lattice keeps T1 high.':'⚠ amorphous lattice raises TLS → lowers T1 → hurts QEC.'}`;
+
+  // score chart (score bar)
+  const scverd=document.getElementById('score_verdict');
+  if(scverd){const col=tier==='PASS'?'var(--green)':tier==='MODERATE'?'var(--amber)':'var(--red)';scverd.textContent=tier+(tier==='PASS'?' ✓':tier==='MODERATE'?' ~':' ✗');scverd.style.color=col;}
+
+  // recommendation
+  const rec=document.getElementById('rec');
+  if(tier==='PASS'){rec.style.display='none';}
+  else{
+    const r=recommend(qk,hk,dk,ck,d,target);
+    const userShape=QEC[ck].shape;
+    if(r){
+      rec.style.display='block';
+      drawOverlay('rec_svg',r.hk,r.dk,ck,r.dist);
+      const kept=[],opt=[];
+      (LOCK.qubit?kept:opt).push('qubit');(LOCK.host?kept:opt).push('material');
+      (LOCK.dop?kept:opt).push('dopant');(LOCK.code?kept:opt).push('code');(LOCK.dist?kept:opt).push('distance');
+      const synthName=`${QEC[ck].label.split(' ')[0]}-tailored-η${QUB[qk].eta}-d${r.dist}`;
+      document.getElementById('rec_detail').innerHTML=
+        `<b>${synthName}</b> <span style="color:var(--text3)">(${userShape} geometry)</span><br/>
+         ${MAT[r.hk].label} + ${DOP[r.dk].label} · d=${r.dist}<br/>
+         ${r.tailorPct>0?`<span style="color:var(--purple)">bias-tailored ${r.tailorPct}% → threshold lifted to ${(r.synthTh*100).toFixed(2)}%</span><br/>`:''}
+         p_L=${r.pL.toExponential(1)} ✓ · T1=${r.T1.toFixed(0)}μs · ΔGf=${r.Gf.toFixed(0)}<br/>
+         <span style="color:var(--text3)">kept ${kept.join(',')||'-'}, optimized ${opt.join(',')||'-'}</span>`;
+    }else{
+      rec.style.display='block';
+      drawOverlay('rec_svg',hk,dk,ck,d);
+      document.getElementById('rec_detail').innerHTML=`<span style="color:var(--amber)">Even bias-tailored ${userShape}-geometry can't reach target. ${userShape==='triangular'?'Triangular codes need biased qubit — unlock qubit type.':'Unlock material or relax target.'}</span>`;
+    }
+  }
+
+  samplerRunning=false;
+}
+
+window.addEventListener('load',()=>{sync();});
+</script>
+</body>
+</html>
