@@ -13,6 +13,7 @@ export default function Navbar() {
 
   const navLinks = [
     { label: 'Home', path: '/' },
+    { label: 'Anatomy', path: '/anatomy' },
     { label: 'Design', path: '/design' },
     { label: 'Why', path: '/why' },
   ];

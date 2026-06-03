@@ -10,6 +10,7 @@ import ScrollToTop from './components/ScrollToTop';
 import Home from './pages/Home';
 import Design from './pages/Design';
 import Why from './pages/Why';
+import Anatomy from './pages/Anatomy';
 import GitHubSync from './pages/GitHubSync';
 
 const AuthenticatedApp = () => {
@@ -40,6 +41,7 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/design" element={<Design />} />
+      <Route path="/anatomy" element={<Anatomy />} />
       <Route path="/why" element={<Why />} />
       <Route path="/github-sync" element={<GitHubSync />} />
       <Route path="*" element={<PageNotFound />} />
