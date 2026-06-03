@@ -716,6 +716,44 @@ window.addEventListener('load', () => {
     if(tlsHist.length) drawChart('tls_chart',tlsHist,'#D85A30',0,Math.max(...tlsHist,0.5));
   });
 });
+
+// ─── ArQitec prefill bridge ─────────────────────────────────────────
+// Listens for postMessage from the parent React app. Applies the form
+// values to the underlying form controls + fires the existing onChange
+// hooks so the displayed info (qubit_info, qec_info) stays consistent.
+window.addEventListener('message', (e) => {
+  const cfg = e && e.data;
+  if (!cfg || cfg.type !== 'arqitec:prefill') return;
+
+  const setSelect = (id, value, onChangeFnName) => {
+    const sel = document.getElementById(id);
+    if (!sel || value == null) return;
+    // only assign if the option exists, otherwise leave default
+    const has = Array.from(sel.options).some(o => o.value === value);
+    if (!has) return;
+    sel.value = value;
+    if (onChangeFnName && typeof window[onChangeFnName] === 'function') {
+      try { window[onChangeFnName](); } catch (_) {}
+    }
+  };
+  const setInput = (id, value) => {
+    const el = document.getElementById(id);
+    if (!el || value == null) return;
+    el.value = value;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  };
+
+  setSelect('qubit_type', cfg.qubitType, 'onQubitChange');
+  setSelect('qec_code',   cfg.qecCode,   'onQECChange');
+  setInput('qec_distance', cfg.qecDistance);
+  setInput('target_error', cfg.targetError);
+
+  // Acknowledge so React can hide a spinner if it wants to.
+  if (e.source && e.source.postMessage) {
+    e.source.postMessage({ type: 'arqitec:prefilled', applied: cfg }, '*');
+  }
+});
 </script>
 </body>
 </html>

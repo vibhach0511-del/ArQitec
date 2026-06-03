@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, ChevronDown, Loader2 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
@@ -8,10 +8,59 @@ const ERROR_RATES = ['10⁻³', '10⁻⁴', '10⁻⁵', '10⁻⁶', '10⁻⁷'];
 const QUBIT_TYPES = ['Transmon', 'Fluxonium', 'Cat qubit'];
 const ALGORITHMS = ['VQE 10 electrons', 'Shor RSA-2048', 'Quantum simulation', 'Custom'];
 
+// ─── Mapping from React form values to optimizer-iframe values ───────
+// The optimizer's <select> options use lowercase short keys; our form
+// shows human labels. If a label has no underlying option (e.g.
+// "Floquet Code") we just omit the field — the listener silently
+// keeps the optimizer's default for that select.
+const QUBIT_TYPE_MAP = {
+  Transmon: 'transmon',
+  Fluxonium: 'fluxonium',
+  'Cat qubit': 'cat',
+};
+const QEC_CODE_MAP = {
+  'Surface Code': 'surface',
+  'Toric Code': 'toric',
+  'Color Code': '2d_color',
+  // Floquet / Repetition codes are not native options in v2 — left
+  // out so the listener falls through to the optimizer's default.
+};
+const ERROR_RATE_MAP = {
+  '10⁻³': 1e-3,
+  '10⁻⁴': 1e-4,
+  '10⁻⁵': 1e-5,
+  '10⁻⁶': 1e-6,
+  '10⁻⁷': 1e-7,
+};
+
+function buildPrefillPayload(form) {
+  return {
+    type: 'arqitec:prefill',
+    qubitType: QUBIT_TYPE_MAP[form.qubitType],
+    qecCode: QEC_CODE_MAP[form.code],
+    targetError: ERROR_RATE_MAP[form.errorRate],
+    qecDistance: 5,
+    // For future use — algorithm + qubit budget aren't yet wired into
+    // any optimizer control, but we forward them so the bridge sees them.
+    algorithm: form.targetAlgorithm,
+    qubitBudget: form.qubits ? Number(form.qubits) : undefined,
+  };
+}
+
 export default function Design() {
   const [form, setForm] = useState({ code: '', errorRate: '', qubits: '', qubitType: 'Transmon', targetAlgorithm: 'VQE 10 electrons', notes: '' });
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const iframeRef = useRef(null);
+
+  // Push the current form values into the iframe. Called from the iframe's
+  // onLoad handler so it fires once the optimizer's own scripts have wired
+  // up the message listener.
+  const sendPrefill = () => {
+    const win = iframeRef.current && iframeRef.current.contentWindow;
+    if (!win) return;
+    win.postMessage(buildPrefillPayload(form), '*');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -208,13 +257,16 @@ export default function Design() {
                 </button>
               </div>
 
-              {/* The actual optimizer — full-bleed iframe */}
+              {/* The actual optimizer — full-bleed iframe. Form values are
+                  postMessage'd in on load so the optimizer pre-configures. */}
               <div className="rounded-xl overflow-hidden border border-border/60 bg-background">
                 <iframe
+                  ref={iframeRef}
                   src="/junction_doping_optimizer_v2.html"
                   title="Junction Doping Optimizer"
                   className="w-full"
                   style={{ height: '85vh', border: 0, display: 'block' }}
+                  onLoad={sendPrefill}
                 />
               </div>
             </motion.div>
