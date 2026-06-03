@@ -190,25 +190,33 @@ export default function Design() {
             <motion.div
               initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
-              className="glass rounded-2xl p-10 text-center border-primary/30"
+              className="glass rounded-2xl p-6 border-primary/30"
             >
-              <div className="w-14 h-14 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl">⚛</span>
+              {/* Parameter summary above the optimizer */}
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+                <div>
+                  <div className="font-display text-lg font-bold text-foreground">Junction doping optimizer</div>
+                  <p className="font-mono text-[11px] text-muted-foreground/80 mt-1">
+                    {form.code} · {form.errorRate} · {form.qubitType} · {form.targetAlgorithm}
+                  </p>
+                </div>
+                <button
+                  onClick={() => { setSubmitted(false); setForm({ code: '', errorRate: '', qubits: '', qubitType: 'Transmon', targetAlgorithm: 'VQE 10 electrons', notes: '' }); }}
+                  className="px-4 py-2 rounded-xl border border-border text-xs text-muted-foreground hover:border-primary/40 hover:text-primary transition-all"
+                >
+                  ← Start another design
+                </button>
               </div>
-              <h2 className="font-display text-2xl font-bold text-foreground mb-3">Recipe queued</h2>
-              <p className="font-body text-sm text-muted-foreground mb-2">
-                Your fabrication recipe for <strong className="text-primary">{form.code}</strong> at{' '}
-                <strong className="text-primary">{form.errorRate}</strong> is being computed.
-              </p>
-              <p className="font-mono text-xs text-muted-foreground/60">
-                Estimated delivery: &lt;48 hours · Results via email
-              </p>
-              <button
-                onClick={() => { setSubmitted(false); setForm({ code: '', errorRate: '', qubits: '', qubitType: 'Transmon', targetAlgorithm: 'VQE 10 electrons', notes: '' }); }}
-                className="mt-8 px-6 py-3 rounded-xl border border-border text-sm text-muted-foreground hover:border-primary/40 hover:text-primary transition-all"
-              >
-                Start another design
-              </button>
+
+              {/* The actual optimizer — full-bleed iframe */}
+              <div className="rounded-xl overflow-hidden border border-border/60 bg-background">
+                <iframe
+                  src="/junction_doping_optimizer_v2.html"
+                  title="Junction Doping Optimizer"
+                  className="w-full"
+                  style={{ height: '85vh', border: 0, display: 'block' }}
+                />
+              </div>
             </motion.div>
           )}
         </div>
