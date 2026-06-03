@@ -18,20 +18,30 @@ const stats = [
 
 const features = [
   {
-    icon: Cpu,
-    title: 'Material Spec from First Principles',
-    desc: 'Set a QEC code and a logical error rate target. ArQitec computes the exact superconductor stack — doping, thickness, annealing — that satisfies it.',
+    icon: Layers,
+    title: 'The 5×5 heatmap',
+    desc: 'The doping pattern across the junction lattice. ● host material doped, ◆ dopant atom placed, · undoped site. The face of the output — what gets remembered.',
   },
   {
-    icon: Layers,
-    title: 'Complete Deposition Output',
-    desc: 'Receive T1, T2, anharmonicity, and interface quality targets in a single fab-ready document your foundry can act on immediately.',
+    icon: Cpu,
+    title: 'The numbers',
+    desc: 'Predicted T1, T2, η, gate fidelity. QEC verdict against threshold. Algorithm feasibility check. Each value graded against the noise budget the engine derived from your target.',
   },
   {
     icon: Zap,
-    title: 'Code-Native Optimization',
-    desc: 'Surface, Toric, Floquet — each code has a distinct error model. The solver understands the threshold behaviour of every major QEC architecture.',
+    title: 'The fabrication recipe',
+    desc: 'Barrier thickness, N₂ partial pressure, deposition temperature. What an engineer actually takes to the cleanroom — every parameter the foundry needs to make the chip.',
   },
+];
+
+// Canonical example from the V2 spec — used as the validation strip
+// underneath the three outputs. Frames "predicted vs required" so the
+// margin and pass/fail are visible at a glance.
+const exampleBudget = [
+  { label: 'T1',           predicted: '210 μs',  required: '> 150 μs',  pass: true },
+  { label: 'T2',           predicted: '95 μs',   required: '> 80 μs',   pass: true },
+  { label: 'η (bias)',     predicted: '14.2',    required: '> 10',      pass: true },
+  { label: 'Gate fidelity',predicted: '99.7%',   required: '> 99.5%',   pass: true },
 ];
 
 export default function Home() {
@@ -148,11 +158,11 @@ export default function Home() {
             className="text-center mb-16"
           >
             <p className="font-mono text-xs text-primary tracking-widest uppercase mb-3">
-              · What it does ·
+              · What comes out ·
             </p>
             <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground">
-              Precision, from target<br />
-              <span className="gradient-text">to deposition.</span>
+              Three things, one engine.<br />
+              <span className="gradient-text">A heatmap, the numbers, the recipe.</span>
             </h2>
           </motion.div>
 
@@ -172,6 +182,58 @@ export default function Home() {
               </motion.div>
             ))}
           </div>
+
+          {/* Canonical example — Surface code d=5, p_L=1e-6, Transmon, VQE 10 electrons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2 }} viewport={{ once: true }}
+            className="mt-10 glass rounded-2xl p-6 border-primary/20"
+          >
+            <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
+              <div>
+                <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-primary mb-1">
+                  example run
+                </div>
+                <div className="font-display text-base font-semibold text-foreground">
+                  Surface code · d = 5 · pL = 1e-6 · Transmon · VQE 10 electrons
+                </div>
+              </div>
+              <div className="font-mono text-[11px] tracking-[0.18em] uppercase text-muted-foreground">
+                all constraints ✓
+              </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {exampleBudget.map((b) => (
+                <div key={b.label} className="rounded-xl border border-border/60 bg-background/40 px-4 py-3">
+                  <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-muted-foreground">{b.label}</div>
+                  <div className="font-mono text-xl font-bold text-foreground mt-1 tabular-nums">
+                    {b.predicted}
+                  </div>
+                  <div className="font-mono text-[11px] text-primary mt-0.5">
+                    ✓ {b.required}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3 font-mono text-xs">
+              <div className="rounded-lg bg-background/40 border border-border/40 px-4 py-2.5">
+                <span className="text-muted-foreground">Junction barrier</span>
+                <span className="float-right text-foreground">AlOₓ · 12% N · 2.3 nm</span>
+              </div>
+              <div className="rounded-lg bg-background/40 border border-border/40 px-4 py-2.5">
+                <span className="text-muted-foreground">SC film</span>
+                <span className="float-right text-foreground">α-Ta on sapphire</span>
+              </div>
+              <div className="rounded-lg bg-background/40 border border-border/40 px-4 py-2.5">
+                <span className="text-muted-foreground">UBM layer</span>
+                <span className="float-right text-foreground">NbN · 15 nm</span>
+              </div>
+              <div className="rounded-lg bg-background/40 border border-border/40 px-4 py-2.5">
+                <span className="text-muted-foreground">Interconnect</span>
+                <span className="float-right text-foreground">Nb-Nb direct bond</span>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
